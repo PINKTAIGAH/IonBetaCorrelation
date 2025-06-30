@@ -1,6 +1,10 @@
 #include "TMath.h"
+#include "TTree.h"
+#include "TTreeReader.h"
+#include "TTreeReaderValue.h"
 
 #include "TreeManager.hh"
+#include "AnatreeEventStructs.hh"
 
 // Constructor
 
@@ -11,89 +15,85 @@ TreeManager::TreeManager(TFile* inputFile){
 }
 
 
-
 // Private Methods
-
-void TreeManager::ExtractTrees(){
-  
-  // Extract the trees form the input file
-  implantTree = (TTree*)inputFile->Get( TreeManagerConstants::implantTreeName.c_str() );
-  gatedImplantTree = (TTree*)inputFile->Get( TreeManagerConstants::gatedImplantTreeName.c_str() );
-  decayTree = (TTree*)inputFile->Get( TreeManagerConstants::decayTreeName.c_str() );
-  germaniumTree = (TTree*)inputFile->Get( TreeManagerConstants::germaniumTreeName.c_str() );
-
-}
 
 void TreeManager::InitialiseReaders(){
 
-  // Initialise readers
-  implantReader = TTreeReader(implantTree);
-  gatedImplantReader = TTreeReader(gatedImplantTree);
-  decayReader = TTreeReader(decayTree);
-  germaniumReader = TTreeReader(germaniumTree);
+  // // Initialise readers
+  implantReader = std::make_unique<TTreeReader>(TreeManagerConstants::implantTreeName.c_str(), inputFile);
+  gatedImplantReader = std::make_unique<TTreeReader>(TreeManagerConstants::gatedImplantTreeName.c_str(), inputFile);
+  decayReader = std::make_unique<TTreeReader>(TreeManagerConstants::decayTreeName.c_str(), inputFile);
+  germaniumReader = std::make_unique<TTreeReader>(TreeManagerConstants::germaniumTreeName.c_str(), inputFile);
 
-  // Initialise TTreeReaderValues
-  implantTime = TTreeReaderValue(implantReader, "implant.time");
-  implantTimeX = TTreeReaderValue(implantReader, "implant.time_x");
-  implantTimeY = TTreeReaderValue(implantReader, "implant.time_y");
-  implantX = TTreeReaderValue(implantReader, "implant.x");
-  implantY = TTreeReaderValue(implantReader, "implant.y");
-  implantEnergy = TTreeReaderValue(implantReader, "implant.e");
-  implantEnergyX = TTreeReaderValue(implantReader, "implant.ex");
-  implantEnergyY = TTreeReaderValue(implantReader, "implant.ey");
-  implantClusterSizeX = TTreeReaderValue(implantReader, "implant.csx");
-  implantClusterSizeY = TTreeReaderValue(implantReader, "implant.csy");
-  implantClusterMinX = TTreeReaderValue(implantReader, "implant.cminx");
-  implantClusterMinY = TTreeReaderValue(implantReader, "implant.cminy");
-  implantClusterMaxX = TTreeReaderValue(implantReader, "implant.cmaxx");
-  implantClusterMaxY = TTreeReaderValue(implantReader, "implant.cmaxy");
-  implantDssd = TTreeReaderValue(implantReader, "implant.dssd");
-  implantSpill = TTreeReaderValue(implantReader, "implant.sp");
-
-  gatedImplantTime = TTreeReaderValue(gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".time" ).c_str() );
-  gatedImplantTimeX = TTreeReaderValue(gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".time_x" ).c_str() );
-  gatedImplantTimeY = TTreeReaderValue(gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".time_y" ).c_str() );
-  gatedImplantX = TTreeReaderValue(gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".x" ).c_str() );
-  gatedImplantY = TTreeReaderValue(gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".y" ).c_str() );
-  gatedImplantEnergy = TTreeReaderValue(gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".e" ).c_str() );
-  gatedImplantEnergyX = TTreeReaderValue(gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".ex" ).c_str() );
-  gatedImplantEnergyY = TTreeReaderValue(gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".ey" ).c_str() );
-  gatedImplantClusterSizeX = TTreeReaderValue(gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".csx" ).c_str() );
-  gatedImplantClusterSizeY = TTreeReaderValue(gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".csy" ).c_str() );
-  gatedImplantClusterMinX = TTreeReaderValue(gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".cminx" ).c_str() );
-  gatedImplantClusterMinY = TTreeReaderValue(gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".cminy" ).c_str() );
-  gatedImplantClusterMaxX = TTreeReaderValue(gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".cmaxx" ).c_str() );
-  gatedImplantClusterMaxY = TTreeReaderValue(gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".cmaxy" ).c_str() );
-  gatedImplantDssd = TTreeReaderValue(gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".dssd" ).c_str() );
-  gatedImplantSpill = TTreeReaderValue(gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".sp" ).c_str() );
-
-  decayTime = TTreeReaderValue(decayReader, "decay.time");
-  decayTimeX = TTreeReaderValue(decayReader, "decay.time_x");
-  decayTimeY = TTreeReaderValue(decayReader, "decay.time_y");
-  decayX = TTreeReaderValue(decayReader, "decay.x");
-  decayY = TTreeReaderValue(decayReader, "decay.y");
-  decayEnergy = TTreeReaderValue(decayReader, "decay.e");
-  decayEnergyX = TTreeReaderValue(decayReader, "decay.ex");
-  decayEnergyY = TTreeReaderValue(decayReader, "decay.ey");
-  decayClusterSizeX = TTreeReaderValue(decayReader, "decay.csx");
-  decayClusterSizeY = TTreeReaderValue(decayReader, "decay.csy");
-  decayClusterMinX = TTreeReaderValue(decayReader, "decay.cminx");
-  decayClusterMinY = TTreeReaderValue(decayReader, "decay.cminy");
-  decayClusterMaxX = TTreeReaderValue(decayReader, "decay.cmaxx");
-  decayClusterMaxY = TTreeReaderValue(decayReader, "decay.cmaxy");
-  decayDssd = TTreeReaderValue(decayReader, "decay.dssd");
-  decaySpill = TTreeReaderValue(decayReader, "decay.sp");
-
-  germaniumTime = TTreeReaderValue(germaniumReader, "germanium.time");
-  germaniumEnergy = TTreeReaderValue(germaniumReader, "germanium.energy");
-  germaniumSpill = TTreeReaderValue(germaniumReader, "germanium.sp");
 
 }
 
 void TreeManager::FillMaps(){
 
+  // Clear multimaps in case this method is ran twice
+  implantEventMap.clear();
+  gatedImplantEventMap.clear();
+  decayEventMap.clear();
+  germaniumEventMap.clear();
+
+  // Initialise TTreeReaderValues
+  TTreeReaderValue<ULong64_t> implantTime(*implantReader, "implant.time");
+  TTreeReaderValue<ULong64_t> implantTimeX(*implantReader, "implant.time_x");
+  TTreeReaderValue<ULong64_t> implantTimeY(*implantReader, "implant.time_y");
+  TTreeReaderValue<Double_t> implantX(*implantReader, "implant.x");
+  TTreeReaderValue<Double_t> implantY(*implantReader, "implant.y");
+  TTreeReaderValue<Double_t> implantEnergy(*implantReader, "implant.e");
+  TTreeReaderValue<Double_t> implantEnergyX(*implantReader, "implant.ex");
+  TTreeReaderValue<Double_t> implantEnergyY(*implantReader, "implant.ey");
+  TTreeReaderValue<Int_t> implantClusterSizeX(*implantReader, "implant.csx");
+  TTreeReaderValue<Int_t> implantClusterSizeY(*implantReader, "implant.csy");
+  TTreeReaderValue<Int_t> implantClusterMinX(*implantReader, "implant.cminx");
+  TTreeReaderValue<Int_t> implantClusterMinY(*implantReader, "implant.cminy");
+  TTreeReaderValue<Int_t> implantClusterMaxX(*implantReader, "implant.cmaxx");
+  TTreeReaderValue<Int_t> implantClusterMaxY(*implantReader, "implant.cmaxy");
+  TTreeReaderValue<Int_t> implantDssd(*implantReader, "implant.dssd");
+  TTreeReaderValue<Int_t> implantSpill(*implantReader, "implant.sp");
+
+  TTreeReaderValue<ULong64_t> gatedImplantTime(*gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".time" ).c_str() );
+  TTreeReaderValue<ULong64_t> gatedImplantTimeX(*gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".time_x" ).c_str() );
+  TTreeReaderValue<ULong64_t> gatedImplantTimeY(*gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".time_y" ).c_str() );
+  TTreeReaderValue<Double_t> gatedImplantX(*gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".x" ).c_str() );
+  TTreeReaderValue<Double_t> gatedImplantY(*gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".y" ).c_str() );
+  TTreeReaderValue<Double_t> gatedImplantEnergy(*gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".e" ).c_str() );
+  TTreeReaderValue<Double_t> gatedImplantEnergyX(*gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".ex" ).c_str() );
+  TTreeReaderValue<Double_t> gatedImplantEnergyY(*gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".ey" ).c_str() );
+  TTreeReaderValue<Int_t> gatedImplantClusterSizeX(*gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".csx" ).c_str() );
+  TTreeReaderValue<Int_t> gatedImplantClusterSizeY(*gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".csy" ).c_str() );
+  TTreeReaderValue<Int_t> gatedImplantClusterMinX(*gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".cminx" ).c_str() );
+  TTreeReaderValue<Int_t> gatedImplantClusterMinY(*gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".cminy" ).c_str() );
+  TTreeReaderValue<Int_t> gatedImplantClusterMaxX(*gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".cmaxx" ).c_str() );
+  TTreeReaderValue<Int_t> gatedImplantClusterMaxY(*gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".cmaxy" ).c_str() );
+  TTreeReaderValue<Int_t> gatedImplantDssd(*gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".dssd" ).c_str() );
+  TTreeReaderValue<Int_t> gatedImplantSpill(*gatedImplantReader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".sp" ).c_str() );
+
+  TTreeReaderValue<ULong64_t> decayTime(*decayReader, "decay.time");
+  TTreeReaderValue<ULong64_t> decayTimeX(*decayReader, "decay.time_x");
+  TTreeReaderValue<ULong64_t> decayTimeY(*decayReader, "decay.time_y");
+  TTreeReaderValue<Double_t> decayX(*decayReader, "decay.x");
+  TTreeReaderValue<Double_t> decayY(*decayReader, "decay.y");
+  TTreeReaderValue<Double_t> decayEnergy(*decayReader, "decay.e");
+  TTreeReaderValue<Double_t> decayEnergyX(*decayReader, "decay.ex");
+  TTreeReaderValue<Double_t> decayEnergyY(*decayReader, "decay.ey");
+  TTreeReaderValue<Int_t> decayClusterSizeX(*decayReader, "decay.csx");
+  TTreeReaderValue<Int_t> decayClusterSizeY(*decayReader, "decay.csy");
+  TTreeReaderValue<Int_t> decayClusterMinX(*decayReader, "decay.cminx");
+  TTreeReaderValue<Int_t> decayClusterMinY(*decayReader, "decay.cminy");
+  TTreeReaderValue<Int_t> decayClusterMaxX(*decayReader, "decay.cmaxx");
+  TTreeReaderValue<Int_t> decayClusterMaxY(*decayReader, "decay.cmaxy");
+  TTreeReaderValue<Int_t> decayDssd(*decayReader, "decay.dssd");
+  TTreeReaderValue<Int_t> decaySpill(*decayReader, "decay.sp");
+
+  TTreeReaderValue<ULong64_t> germaniumTime(*germaniumReader, "germanium.time");
+  TTreeReaderValue<Double_t> germaniumEnergy(*germaniumReader, "germanium.energy");
+  TTreeReaderValue<Int_t> germaniumSpill(*germaniumReader, "germanium.sp");
+
   // Load implant map
-  while (implantReader.Next()){
+  while (implantReader->Next()){
     if ( *implantDssd==TreeManagerConstants::dssd && TMath::Abs((Long64_t)*implantTimeX-(Long64_t)*implantTimeY) < TreeManagerConstants::implantTimeDiff ){
 
       ImplantEvent tempEvent = {
@@ -107,7 +107,7 @@ void TreeManager::FillMaps(){
   }
 
   // Load gated implant map
-  while (gatedImplantReader.Next()){
+  while (gatedImplantReader->Next()){
     if ( *implantDssd==TreeManagerConstants::dssd && TMath::Abs((Long64_t)*implantTimeX-(Long64_t)*implantTimeY) < TreeManagerConstants::implantTimeDiff ){
 
       ImplantEvent tempEvent = {
@@ -121,7 +121,7 @@ void TreeManager::FillMaps(){
   }
 
   // Load decay map
-  while (decayReader.Next()){
+  while (decayReader->Next()){
     if ( *decayDssd == TreeManagerConstants::dssd && TMath::Abs((Long64_t)*decayTimeX-(Long64_t)*decayTimeY) < TreeManagerConstants::decayTimeDiff && TMath::Abs((Long64_t)*decayEnergyX-(Long64_t)*decayEnergyY) < TreeManagerConstants::decayEnergyDiff && *decayEnergy > TreeManagerConstants::decayEnergyMin && *decayEnergy < TreeManagerConstants::decayEnergyMax ){
 
       DecayEvent tempEvent = {
@@ -135,7 +135,7 @@ void TreeManager::FillMaps(){
   }
 
   // Load germanium map
-  while (germaniumReader.Next()){
+  while (germaniumReader->Next()){
     if ( *germaniumEnergy > TreeManagerConstants::germaniumEnergyMin ){
 
       GermaniumEvent tempEvent = { *germaniumTime, *germaniumEnergy, *germaniumSpill };
@@ -152,8 +152,6 @@ void TreeManager::FillMaps(){
 
 void TreeManager::LoadEvents(){
   
-  std::cout << "Extracting trees from anatree..." << std::endl;
-  ExtractTrees();
   std::cout << "Initialising TTreeReaders..." << std::endl;
   InitialiseReaders();
   std::cout << "Filling maps with events..." << std::endl;
@@ -164,15 +162,17 @@ void TreeManager::LoadEvents(){
 
 EventMaps TreeManager::GetEventMaps(){
 
-  EventMaps extractedEvents = {&implantEventMap, &gatedImplantEventMap, &decayEventMap, &germaniumEventMap};
-  return extractedEvents;
+  EventMaps tempEventMaps {&implantEventMap, &gatedImplantEventMap, &decayEventMap, &germaniumEventMap};
+  return tempEventMaps;
 
 }
 
-void TreeManager::Cleanup(){
-  // Clear heap
-  delete implantTree;
-  delete gatedImplantTree;
-  delete decayTree;
-  delete germaniumTree;
+void TreeManager::ClearHeap(){
+
+  // Clean up heap allocated readers
+  implantReader.reset();
+  gatedImplantReader.reset();
+  decayReader.reset();
+  germaniumReader.reset();
+
 }

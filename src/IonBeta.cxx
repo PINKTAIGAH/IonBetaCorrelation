@@ -3,6 +3,7 @@
 #include "TFile.h"
 
 #include "TreeManager.hh"
+#include "HistogramManager.hh"
 
 
 void IonBeta(const char* inputFileName, const char* outputFileName){
@@ -18,7 +19,7 @@ void IonBeta(const char* inputFileName, const char* outputFileName){
     std::cerr << "Error: Could not open file " << std::endl;
    std::exit(1);
   }
-  std::cout << "File loaded: "<< inputFile->GetName() << '\n';
+  std::cout << "\nFile loaded: "<< inputFile->GetName() << '\n';
 
   // Open output file
   TFile* outputFile = new TFile(outputFileName, "RECREATE");
@@ -29,6 +30,12 @@ void IonBeta(const char* inputFileName, const char* outputFileName){
   }
 
   // *************************************************************************************
+  // ******************************** INITAILISE HISTOGRAMS ******************************
+  // *************************************************************************************
+
+  HistogramManager* histoManager = new HistogramManager(outputFile);
+
+  // *************************************************************************************
   // ******************************** EXTRACT DATA FROM ANATREES *************************
   // *************************************************************************************
 
@@ -37,13 +44,32 @@ void IonBeta(const char* inputFileName, const char* outputFileName){
   EventMaps eventMaps = treeManager->GetEventMaps();
 
   // *************************************************************************************
+  // ************************************** DEBUG **************************************
+  // *************************************************************************************
+
+  for (auto itr : *eventMaps.gatedImplant){
+    histoManager->h1_onspill_times->Fill(itr.first);
+  }
+
+  // *************************************************************************************
+  // ***************************** WRITE HISTOGRAMS **************************************
+  // *************************************************************************************
+
+  histoManager->WriteHistograms();
+
+  // *************************************************************************************
   // ************************************** CLEANUP **************************************
   // *************************************************************************************
 
+  treeManager->ClearHeap();
+  delete treeManager;
+
+  histoManager->ClearHeap();
+  delete histoManager;
+      
+  inputFile->Close();
+  outputFile->Close();
+
   delete inputFile;
   delete outputFile;
-
-  treeManager->Cleanup();
-  delete treeManager;
-      
 }
