@@ -1,5 +1,8 @@
 #include <iostream>
+
 #include "TFile.h"
+
+#include "TreeManager.hh"
 
 
 void IonBeta(const char* inputFileName, const char* outputFileName){
@@ -26,12 +29,21 @@ void IonBeta(const char* inputFileName, const char* outputFileName){
   }
 
   // *************************************************************************************
-  // *************************** EXTRACT DATA FROM ANATREES ******************************
+  // ******************************** EXTRACT DATA FROM ANATREES *************************
   // *************************************************************************************
 
+  TreeManager* treeManager = new TreeManager(inputFile); 
+  treeManager->LoadEvents();
+  EventMaps eventMaps = treeManager->GetEventMaps();
 
-  // Cleanup
+  // *************************************************************************************
+  // ************************************** CLEANUP **************************************
+  // *************************************************************************************
+
   delete inputFile;
   delete outputFile;
+
+  treeManager->Cleanup();
+  delete treeManager;
       
 }
