@@ -1,0 +1,41 @@
+#include <utility>
+
+#include "utils.hh"
+
+bool IsStripOverlaping(int strip, ClusterRange clusterRange){
+  return strip >= clusterRange.min && strip < clusterRange.max+1;
+}
+
+bool IsNoisyStrip(std::vector<int> noisyStripVector, ClusterRange decayClusterRange){
+  // Function which will loop over vector containing noisy strips and check
+  // if current event occured in a noisy strip
+
+  bool isNoisy = false; // Flag telling if event is from noisy strip
+
+  // Loop over vector if not empty
+  if (!noisyStripVector.empty()){
+    // Loop for each noisy strip
+    for (auto& noisyStrip : noisyStripVector){
+      // If event strip corresponds to a noisy strip, change flag and break
+      if ( IsStripOverlaping(noisyStrip, decayClusterRange) ){
+        isNoisy = true;
+        break;
+      }
+    }
+  }
+
+  return isNoisy;
+}
+
+bool IsOverlapping1D(ClusterRange clusterRange, ClusterRange otherClusterRange, bool allowAjacents){
+
+  if (allowAjacents) return clusterRange.max >= otherClusterRange.min && otherClusterRange.max >= clusterRange.min;
+  else return clusterRange.max >= otherClusterRange.min && otherClusterRange.max >= clusterRange.min;
+  
+}
+
+bool AreClustersOverlapping(std::pair<ClusterRange, ClusterRange> cluster, std::pair<ClusterRange, ClusterRange> otherCluster, bool allowAjacents){
+
+  return IsOverlapping1D(cluster.first, otherCluster.first, allowAjacents) && IsOverlapping1D(cluster.second, otherCluster.second, allowAjacents);
+}
+

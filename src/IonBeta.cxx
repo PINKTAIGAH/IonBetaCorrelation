@@ -47,8 +47,8 @@ void IonBeta(const char* inputFileName, const char* outputFileName){
   // ************************************** DEBUG **************************************
   // *************************************************************************************
 
-  for (auto itr : *eventMaps.gatedImplant){
-    histoManager->h1_onspill_times->Fill(itr.first);
+  for (auto itr : *eventMaps.implant){
+    std::cout << itr.second.csX << ", " << itr.second.cminX << ", " << itr.second.cmaxX << std::endl;
   }
 
   // *************************************************************************************
