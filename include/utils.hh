@@ -10,6 +10,7 @@
 
 struct ClusterRange {int min; int max;};
 struct ForwardBackwardPair {int forward; int backward;};
+struct XYPair {ClusterRange x; ClusterRange y;};
 
 // *************************************************************************************
 // ****************************** DEFINE FUNCTIONS *************************************
@@ -18,6 +19,6 @@ struct ForwardBackwardPair {int forward; int backward;};
 bool IsNoisyStrip(std::vector<int> noisyStripVector, ClusterRange decayClusterRange);
 bool IsStripOverlaping(int strip, ClusterRange clusterRange);
 bool IsOverlapping1D(ClusterRange clusterRange, ClusterRange otherClusterRange, bool allowAjacents);
-bool AreClustersOverlapping(std::pair<ClusterRange, ClusterRange> cluster, std::pair<ClusterRange, ClusterRange> otherCluster, bool allowAjacents);
+bool AreClustersOverlapping(XYPair cluster, XYPair otherCluster, bool allowAjacents);
 
 #endif

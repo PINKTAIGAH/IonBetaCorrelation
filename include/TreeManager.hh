@@ -71,9 +71,10 @@ class TreeManager{
   public:
 
     TreeManager(TFile* inputFile);
+    ~TreeManager();
+
     void LoadEvents();
     EventMaps GetEventMaps();
-    void ClearHeap();
 };
 
 

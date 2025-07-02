@@ -2,6 +2,7 @@
 #define CORRELATION_MANAGER_H
 
 #include <set>
+#include <memory>
 
 #include "TObject.h"
 
@@ -26,7 +27,7 @@ enum class InterruptedCoincidenceType { NOT_INTERRUPTED, INTERRUPTED }; // Tags 
 struct BetaCandidateEvent{
 
   CorrelationType correlationType;
-  BetaType BetaType;
+  BetaType betaType;
   ULong64_t implantTime;
   ULong64_t decayTime;
   Double_t implantPositionX;
@@ -70,20 +71,27 @@ class CorrelationManager {
     std::multimap<ULong64_t, ImplantEvent>* gatedImplantEventMap;
     std::multimap<ULong64_t, DecayEvent>* decayEventMap;
     std::multimap<ULong64_t, GermaniumEvent>* germaniumEventMap;
+    std::unique_ptr<TimeRangeManagerLocal> deadtimeWindowManager;
 
     // Class Members
     std::multimap<ULong64_t, ImplantDecayCorrelationEvent> implantDecayCorrelatedEventMap;
-    TimeRangeManagerLocal deadtimeWindowManager;
 
+    // Private Methods
+    void InitialiseDeadtimeWindowManager();
+    void TagImplants();
+    void CorrelateImplantDecays();
+    void FillImplantDecayHistograms();
+    void CorrelateDecayGermaniums();
+    void FillDecayGermaniumDecays();
 
 
   public:
 
     CorrelationManager(EventMaps eventMaps, HistogramManager* histogramManager);
-    void CorrelateImplantDecays();
-    void FillImplantDecayHistograms();
-    void CorrelateDecayGermaniums();
-    void FillDecayGermaniumDecays();
+    ~CorrelationManager() = default;
+    void RunImplantDecayCorrelation();
+    void RunDecayGermaniumCorrelation();
+
 
 };
 

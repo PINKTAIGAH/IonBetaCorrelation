@@ -34,8 +34,8 @@ bool IsOverlapping1D(ClusterRange clusterRange, ClusterRange otherClusterRange, 
   
 }
 
-bool AreClustersOverlapping(std::pair<ClusterRange, ClusterRange> cluster, std::pair<ClusterRange, ClusterRange> otherCluster, bool allowAjacents){
+bool AreClustersOverlapping(XYPair cluster, XYPair otherCluster, bool allowAjacents){
 
-  return IsOverlapping1D(cluster.first, otherCluster.first, allowAjacents) && IsOverlapping1D(cluster.second, otherCluster.second, allowAjacents);
+  return IsOverlapping1D(cluster.x, otherCluster.x, allowAjacents) && IsOverlapping1D(cluster.y, otherCluster.y, allowAjacents);
 }
 

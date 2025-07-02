@@ -11,5 +11,7 @@ int main (int argc, const char** argv){
   // Call IonBeta Function (Main action function)
   IonBeta(argv[1], argv[2]);
 
+  std::cout << "Program has run succesfully!" << std::endl;
+
   return 0;
 }

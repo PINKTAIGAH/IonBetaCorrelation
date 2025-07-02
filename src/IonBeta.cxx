@@ -4,6 +4,7 @@
 
 #include "TreeManager.hh"
 #include "HistogramManager.hh"
+#include "CorrelationManager.hh"
 
 
 void IonBeta(const char* inputFileName, const char* outputFileName){
@@ -44,12 +45,11 @@ void IonBeta(const char* inputFileName, const char* outputFileName){
   EventMaps eventMaps = treeManager->GetEventMaps();
 
   // *************************************************************************************
-  // ************************************** DEBUG **************************************
+  // ********************************* MAKE CORRELATION **********************************
   // *************************************************************************************
 
-  for (auto itr : *eventMaps.implant){
-    std::cout << itr.second.csX << ", " << itr.second.cminX << ", " << itr.second.cmaxX << std::endl;
-  }
+  CorrelationManager* correlationManager = new CorrelationManager(eventMaps, histoManager);
+  correlationManager->RunImplantDecayCorrelation();
 
   // *************************************************************************************
   // ***************************** WRITE HISTOGRAMS **************************************
@@ -61,10 +61,10 @@ void IonBeta(const char* inputFileName, const char* outputFileName){
   // ************************************** CLEANUP **************************************
   // *************************************************************************************
 
-  treeManager->ClearHeap();
+  delete correlationManager;
+
   delete treeManager;
 
-  histoManager->ClearHeap();
   delete histoManager;
       
   inputFile->Close();

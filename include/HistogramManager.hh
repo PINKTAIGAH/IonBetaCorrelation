@@ -165,8 +165,9 @@ class HistogramManager{
     TH1D* h1_clustersize_forwards_unknowngamma_match;
 
     HistogramManager(TFile* outputFile);
+    ~HistogramManager();    
+
     void WriteHistograms();
-    void ClearHeap();
 
 };
 

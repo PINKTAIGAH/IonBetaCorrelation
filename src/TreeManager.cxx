@@ -14,6 +14,16 @@ TreeManager::TreeManager(TFile* inputFile){
 
 }
 
+TreeManager::~TreeManager(){
+
+  // Clean up heap allocated readers
+  implantReader.reset();
+  gatedImplantReader.reset();
+  decayReader.reset();
+  germaniumReader.reset();
+
+}
+
 
 // Private Methods
 
@@ -98,8 +108,8 @@ void TreeManager::FillMaps(){
 
       ImplantEvent tempEvent = {
         *implantTime, *implantTimeX, *implantTimeY, *implantX, *implantY, *implantEnergy, *implantEnergyX, *implantEnergyY, *implantClusterSizeX, *implantClusterSizeY,
-        *implantClusterMinX, *implantClusterMaxX, *implantClusterMinY, *implantClusterMaxY, *implantDssd, *implantSpill 
-      };
+        *implantClusterMinX, *implantClusterMaxX+1, *implantClusterMinY, *implantClusterMaxY+1, *implantDssd, *implantSpill 
+      }; // We add 1 to max because the max and min are the same values
 
       implantEventMap.emplace(*implantTime, tempEvent);
 
@@ -112,8 +122,8 @@ void TreeManager::FillMaps(){
 
       ImplantEvent tempEvent = {
         *gatedImplantTime, *gatedImplantTimeX, *gatedImplantTimeY, *gatedImplantX, *gatedImplantY, *gatedImplantEnergy, *gatedImplantEnergyX, *gatedImplantEnergyY, *gatedImplantClusterSizeX, *gatedImplantClusterSizeY,
-        *gatedImplantClusterMinX, *gatedImplantClusterMaxX, *gatedImplantClusterMinY, *gatedImplantClusterMaxY, *gatedImplantDssd, *gatedImplantSpill 
-      };
+        *gatedImplantClusterMinX, *gatedImplantClusterMaxX+1, *gatedImplantClusterMinY, *gatedImplantClusterMaxY+1, *gatedImplantDssd, *gatedImplantSpill 
+      }; // We add 1 to max because the max and min are the same values
 
       gatedImplantEventMap.emplace(*gatedImplantTime, tempEvent);
 
@@ -126,8 +136,8 @@ void TreeManager::FillMaps(){
 
       DecayEvent tempEvent = {
         *decayTime, *decayTimeX, *decayTimeY, *decayX, *decayY, *decayEnergy, *decayEnergyX, *decayEnergyY, *decayClusterSizeX, *decayClusterSizeY,
-        *decayClusterMinX, *decayClusterMaxX, *decayClusterMinY, *decayClusterMaxY, *decayDssd, *decaySpill 
-      };
+        *decayClusterMinX, *decayClusterMaxX+1, *decayClusterMinY, *decayClusterMaxY+1, *decayDssd, *decaySpill 
+      }; // We add 1 to max because the max and min are the same values
 
       decayEventMap.emplace(*decayTime, tempEvent);
 
@@ -164,15 +174,5 @@ EventMaps TreeManager::GetEventMaps(){
 
   EventMaps tempEventMaps {&implantEventMap, &gatedImplantEventMap, &decayEventMap, &germaniumEventMap};
   return tempEventMaps;
-
-}
-
-void TreeManager::ClearHeap(){
-
-  // Clean up heap allocated readers
-  implantReader.reset();
-  gatedImplantReader.reset();
-  decayReader.reset();
-  germaniumReader.reset();
 
 }
