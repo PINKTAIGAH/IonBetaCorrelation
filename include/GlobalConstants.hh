@@ -16,6 +16,8 @@ namespace Global{
   const bool vetoInterruptedImplants = true;
   const bool onlyOffspillDecays = false;
 
+  const Int_t betaGammaCandidateCut = 5;
+
   const std::vector<Int_t> BROKEN_AIDA_X_STRIPS_IMPLANT = {};
   const std::vector<Int_t> BROKEN_AIDA_Y_STRIPS_IMPLANT = {};
   const std::vector<Int_t> BROKEN_AIDA_X_STRIPS_DECAY = {63, 64, 66, 130, 189, 191, 194, 225, 256, 319, 320, 192, 128, 255};

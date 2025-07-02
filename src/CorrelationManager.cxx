@@ -321,6 +321,42 @@ void CorrelationManager::FillImplantDecayHistograms(){
 
 }
 
+void CorrelationManager::CorrelateDecayGermaniums(){
+
+  // Loop over matched implant decay events
+  for ( auto& implantDecayCorrelatedItr : implantDecayCorrelatedEventMap ){
+
+    // Define boolians to skip forward or backward matches
+    bool skipForward = false;
+    bool skipBackward = false;
+
+    // Unpack implant decay Correlated event
+    auto& implantDecayMatchMultiplicity = implantDecayCorrelatedItr.second.implantDecayMatchMultiplicity;
+    auto& betaCandidateEventVector = implantDecayCorrelatedItr.second.betaCandidateEventVector;
+
+    if ( implantDecayMatchMultiplicity.forward > Global::betaGammaCandidateCut ) skipForward = true;
+    if ( implantDecayMatchMultiplicity.backward > Global::betaGammaCandidateCut ) skipBackward = true;
+
+    // Loop over beta candidates
+    for ( auto& betaCandidateEvent : betaCandidateEventVector ){
+
+      // Skip candidate if correlation type is above the candidate cut
+      if ( skipForward && betaCandidateEvent.correlationType == CorrelationType::FORWARDS ) continue; 
+      if ( skipBackward && betaCandidateEvent.correlationType == CorrelationType::BACKWARDS ) continue; 
+
+      // Check if we only analyse offspill
+      if ( Global::onlyOffspillDecays && betaCandidateEvent.decaySpill == 1) continue;
+
+      // Define lower bound and upper bounds for loops
+      
+
+    }
+
+
+  }
+
+}
+
 
 // Public Methods
 
@@ -336,8 +372,8 @@ void CorrelationManager::RunImplantDecayCorrelation(){
 void CorrelationManager::RunDecayGermaniumCorrelation(){
 
   std::cout << "Correlating matched decays to germaniums" << std::endl;
-  CorrelateImplantDecays();
-  std::cout << "Filling decay germanium histograms" << std::endl;
-  FillImplantDecayHistograms();
+  CorrelateDecayGermaniums();
+  // std::cout << "Filling decay germanium histograms" << std::endl;
+  // FillImplantDecayHistograms();
 
 }

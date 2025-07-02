@@ -4,7 +4,7 @@
 int main (int argc, const char** argv){
 
   if ( argc != 3 ){
-    std::cerr << "Program call must follow the following structure: ./ionbeta <Input File> <Output File> " << std::endl;
+    std::cerr << "Program call must follow the following structure: ./ionbeta <Input File> <Output File> \n" << std::endl;
     return 1;
   }
 

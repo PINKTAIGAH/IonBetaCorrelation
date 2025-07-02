@@ -82,7 +82,6 @@ class CorrelationManager {
     void CorrelateImplantDecays();
     void FillImplantDecayHistograms();
     void CorrelateDecayGermaniums();
-    void FillDecayGermaniumDecays();
 
 
   public:

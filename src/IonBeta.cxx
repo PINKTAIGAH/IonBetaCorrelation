@@ -20,7 +20,7 @@ void IonBeta(const char* inputFileName, const char* outputFileName){
     std::cerr << "Error: Could not open file " << std::endl;
    std::exit(1);
   }
-  std::cout << "\nFile loaded: "<< inputFile->GetName() << '\n';
+  std::cout << "\nFile loaded: "<< inputFile->GetName() << '\n' << std::endl;
 
   // Open output file
   TFile* outputFile = new TFile(outputFileName, "RECREATE");
