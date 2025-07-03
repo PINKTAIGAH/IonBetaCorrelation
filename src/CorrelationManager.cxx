@@ -1,3 +1,4 @@
+#include "Logger.hh"
 #include "GlobalConstants.hh"
 #include "CorrelationManager.hh"
 
@@ -31,6 +32,10 @@ CorrelationManager::CorrelationManager(EventMaps eventMaps, HistogramManager* hi
 
   // Assign the histogram manager
   this->histogramManager = histogramManager;
+
+  // Assign number of gated implants
+  gatedImplantCounter = gatedImplantEventMap->size();
+  Logger::Log("Number of " + Global::isotopeName + "in file: " + std::to_string(gatedImplantCounter));
 
   // Initialise and fill deadtime window
   InitialiseDeadtimeWindowManager();
@@ -66,8 +71,13 @@ void CorrelationManager::TagImplants(){
 
 void CorrelationManager::CorrelateImplantDecays(){
 
+  Logger::ScopedTimer localTimer("Correlating implants to decays"); // Time method
+
   // Forward declaration of vector containing BetaCandidateEnvents
   std::vector<BetaCandidateEvent> betaCandidateEventVector;
+
+  // Initialise beta candidate counter
+  betaCandidateCounter = 0;
 
   // Loop over all gated implants
   for (auto gatedImplantItr = gatedImplantEventMap->begin(); gatedImplantItr != gatedImplantEventMap->end(); ++gatedImplantItr ){
@@ -109,7 +119,7 @@ void CorrelationManager::CorrelateImplantDecays(){
       if ( Global::onlyOffspillDecays && decayEvent.spill == 1) continue;
 
       // Skip if clusters aren't overlapping
-      if ( !AreClustersOverlapping( {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, false ) ) continue;
+      if ( !AreClustersOverlapping( {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, {{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}, Global::allowAjacentCusters ) ) continue;
 
       // Determine timedifference between implant and decay
       Long64_t timediff = (Long64_t)decayEvent.time - (Long64_t)gatedImplantEvent.time;
@@ -125,6 +135,7 @@ void CorrelationManager::CorrelateImplantDecays(){
 
       // Increase forward match counter
       ++implantDecayMultiplicityForward;
+      ++betaCandidateCounter;
       // Define tags for match
       BetaType betaType = BetaType::CANDIDATE;
       CorrelationType correlationType  = CorrelationType::FORWARDS;
@@ -185,7 +196,7 @@ void CorrelationManager::CorrelateImplantDecays(){
       if ( Global::onlyOffspillDecays && decayEvent.spill == 1) continue;
 
       // Skip if clusters aren't overlapping
-      if ( !AreClustersOverlapping( {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, false ) ) continue;
+      if ( !AreClustersOverlapping( {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, {{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}, Global::allowAjacentCusters ) ) continue;
 
       // Determine timedifference between implant and decay
       Long64_t timediff = (Long64_t)decayEvent.time - (Long64_t)gatedImplantEvent.time;
@@ -206,7 +217,7 @@ void CorrelationManager::CorrelateImplantDecays(){
       CorrelationType correlationType  = CorrelationType::BACKWARDS;
 
       // Override beta type if a specific match number
-      switch (implantDecayMultiplicityForward){
+      switch (implantDecayMultiplicityBackward){
         case 1: {
           // First match 
           foundMatchBackward = true;
@@ -251,6 +262,8 @@ void CorrelationManager::CorrelateImplantDecays(){
 
 void CorrelationManager::FillImplantDecayHistograms(){
 
+  Logger::ScopedTimer localTimer("Filling correlated implant decay histograms"); // Time method
+
   // Loop over all implant decay matches
   for (auto& implantDecayCorrelatedItr : implantDecayCorrelatedEventMap){
   
@@ -283,7 +296,7 @@ void CorrelationManager::FillImplantDecayHistograms(){
         histogramManager->h2_implant_energy_dt_forward->Fill(betaCandidateEvent.implantEnergy, betaCandidateEvent.timediff);
         histogramManager->h2_decay_energy_dt_forward->Fill(betaCandidateEvent.decayEnergy, betaCandidateEvent.timediff);
         histogramManager->h2_strip_dt_forward->Fill(betaCandidateEvent.decayPositionX, betaCandidateEvent.timediff);
-        histogramManager->h2_strip_dt_forward->Fill(betaCandidateEvent.decayPositionY+400, betaCandidateEvent.timediff);
+        histogramManager->h2_strip_dt_forward->Fill(betaCandidateEvent.decayPositionY+400, betaCandidateEvent.timediff);; // Add 400 to skip to part of histo containing y strips
 
         histogramManager->nt_all_candidate_ionbeta_dt->Fill((double)betaCandidateEvent.timediff);
         histogramManager->h1_all_candidate_ionbeta_dt->Fill(betaCandidateEvent.timediff);
@@ -323,6 +336,11 @@ void CorrelationManager::FillImplantDecayHistograms(){
 
 void CorrelationManager::CorrelateDecayGermaniums(){
 
+  Logger::ScopedTimer localTimer("Correlating matched decays to gammas"); // Time method
+
+  // Initialise matched gamma counter
+  matchedGammaCounter = 0;
+
   // Loop over matched implant decay events
   for ( auto& implantDecayCorrelatedItr : implantDecayCorrelatedEventMap ){
 
@@ -348,10 +366,99 @@ void CorrelationManager::CorrelateDecayGermaniums(){
       if ( Global::onlyOffspillDecays && betaCandidateEvent.decaySpill == 1) continue;
 
       // Define lower bound and upper bounds for loops
+      auto germaniumItrStart = germaniumEventMap->lower_bound(betaCandidateEvent.decayTime - Global::decayGammaWindow.start - 10e3); // 10e3 before start of gamma window
+      auto germaniumItrEnd = germaniumEventMap->upper_bound(betaCandidateEvent.decayTime - Global::decayGammaWindow.end + 10e3); // 10e3 after end of gamma window
       
+      // Loop over all germaniums in bounds
+      for (auto germaniumItr = germaniumItrStart; germaniumItr != germaniumItrEnd; ++germaniumItr){
+
+        // Unpack germanium event & find timediff
+        auto& germaniumEvent = germaniumItr->second;
+        Long64_t betaGammaTimediff =  (Long64_t)germaniumEvent.time - (Long64_t)betaCandidateEvent.decayTime;
+
+        // Fill histos
+        histogramManager->h2_gatedimplantbetagamma_betagamma_dt_vs_implantbeta_dt->Fill(betaCandidateEvent.timediff, betaGammaTimediff);
+        if (betaCandidateEvent.correlationType == CorrelationType::FORWARDS){
+          histogramManager->h1_gatedimplantbetagamma_spectrum_after_ionbeta_dt_forwardmatch->Fill(betaGammaTimediff);
+          histogramManager->h2_gatedimplantbetagamma_spectrum_after_ionbeta_dt_energy_forwardmatch->Fill(betaGammaTimediff, germaniumEvent.e);
+        }
+        if (betaCandidateEvent.correlationType == CorrelationType::BACKWARDS){
+          histogramManager->h1_gatedimplantbetagamma_spectrum_after_ionbeta_dt_backwardmatch->Fill(betaGammaTimediff);
+          histogramManager->h2_gatedimplantbetagamma_spectrum_after_ionbeta_dt_energy_backwardmatch->Fill(betaGammaTimediff, germaniumEvent.e);
+        }
+
+        // Check if germanium event is in prompt window
+        if ( ! (betaGammaTimediff > Global::decayGammaWindow.start && betaGammaTimediff < Global::decayGammaWindow.end) ) continue;
+
+        // Forward Correlation
+        if (betaCandidateEvent.correlationType == CorrelationType::FORWARDS){
+        
+          // Assign gamma to betaCandidate event
+          betaCandidateEvent.SetGammaParameters(germaniumEvent.e);
+          ++matchedGammaCounter;
+        
+          // Fill histos
+          histogramManager->h1_gatedimplantbetagamma_spectrum_after_ionbeta_forwardmatch->Fill(germaniumEvent.e);
+          histogramManager->h2_gatedimplantbetagamma_energy_vs_decaystrip_forwardmatch->Fill(betaCandidateEvent.decayPositionX, germaniumEvent.e);
+          histogramManager->h2_gatedimplantbetagamma_energy_vs_decaystrip_forwardmatch->Fill(betaCandidateEvent.decayPositionY + 400, germaniumEvent.e); // Add 400 to skip to part of histo containing y strips
+
+          // Define lower bound and upper bounds for second germanium loop
+          auto otherGermaniumItrStart = germaniumEventMap->lower_bound(betaCandidateEvent.decayTime - Global::decayGammaWindow.start - 10e3); // 10e3 before start of gamma window
+          auto otherGermaniumItrEnd = germaniumEventMap->upper_bound(betaCandidateEvent.decayTime - Global::decayGammaWindow.end + 10e3); // 10e3 after end of gamma window
+
+          // Perform Gamma-Gamma Correlation
+          for (auto otherGermaniumItr = otherGermaniumItrStart; otherGermaniumItr != otherGermaniumItrEnd; ++otherGermaniumItr){
+            
+            // Skip if both germanium events are the same gamma
+            if (germaniumItr == otherGermaniumItr) continue;
+
+            // Unapack other germanium event
+            auto& otherGermaniumEvent = otherGermaniumItr->second;
+            Long64_t gammaGammaTimediff = (Long64_t)otherGermaniumEvent.time - (Long64_t)germaniumEvent.time;
+
+            histogramManager->h2_gatedimplantbetagamma_spectrum_after_ionbeta_square_time_forwardmatch->Fill(germaniumEvent.e, gammaGammaTimediff);
+
+            // Fill GammaGamma Matrix if inside time window
+            if (gammaGammaTimediff > Global::gammaGammaWindow.start && gammaGammaTimediff < Global::gammaGammaWindow.end) histogramManager->h2_gatedimplantbetagamma_spectrum_after_ionbeta_square_forwardmatch->Fill(germaniumEvent.e, otherGermaniumEvent.e);
+
+          }
+        
+        }
+
+        // Backward Correlation
+        if (betaCandidateEvent.correlationType == CorrelationType::BACKWARDS){
+        
+          // Fill histos
+          histogramManager->h1_gatedimplantbetagamma_spectrum_after_ionbeta_backwardmatch->Fill(germaniumEvent.e);
+          histogramManager->h2_gatedimplantbetagamma_energy_vs_decaystrip_backwardmatch->Fill(betaCandidateEvent.decayPositionX, germaniumEvent.e);
+          histogramManager->h2_gatedimplantbetagamma_energy_vs_decaystrip_backwardmatch->Fill(betaCandidateEvent.decayPositionY + 400, germaniumEvent.e); // Add 400 to skip to part of histo containing y strips
+
+          // Define lower bound and upper bounds for second germanium loop
+          auto otherGermaniumItrStart = germaniumEventMap->lower_bound(betaCandidateEvent.decayTime - Global::decayGammaWindow.start - 10e3); // 10e3 before start of gamma window
+          auto otherGermaniumItrEnd = germaniumEventMap->upper_bound(betaCandidateEvent.decayTime - Global::decayGammaWindow.end + 10e3); // 10e3 after end of gamma window
+
+          // Perform Gamma-Gamma Correlation
+          for (auto otherGermaniumItr = otherGermaniumItrStart; otherGermaniumItr != otherGermaniumItrEnd; ++otherGermaniumItr){
+            
+            // Skip if both germanium events are the same gamma
+            if (germaniumItr == otherGermaniumItr) continue;
+
+            // Unapack other germanium event
+            auto& otherGermaniumEvent = otherGermaniumItr->second;
+            Long64_t gammaGammaTimediff = (Long64_t)otherGermaniumEvent.time - (Long64_t)germaniumEvent.time;
+
+            histogramManager->h2_gatedimplantbetagamma_spectrum_after_ionbeta_square_time_backwardmatch->Fill(germaniumEvent.e, gammaGammaTimediff);
+
+            // Fill GammaGamma Matrix if inside time window
+            if (gammaGammaTimediff > Global::gammaGammaWindow.start && gammaGammaTimediff < Global::gammaGammaWindow.end) histogramManager->h2_gatedimplantbetagamma_spectrum_after_ionbeta_square_backwardmatch->Fill(germaniumEvent.e, otherGermaniumEvent.e);
+
+          }
+
+        }
+
+      }
 
     }
-
 
   }
 
@@ -359,21 +466,20 @@ void CorrelationManager::CorrelateDecayGermaniums(){
 
 
 // Public Methods
-
 void CorrelationManager::RunImplantDecayCorrelation(){
 
-  std::cout << "Correlating implants to decays" << std::endl;
+  Logger::Log("Correlating implants to decays");
   CorrelateImplantDecays();
-  std::cout << "Filling implant decay histograms" << std::endl;
+  Logger::Log("Number of beta candidates identified: " + std::to_string(betaCandidateCounter));
+  Logger::Log("Filling implant decay histograms");
   FillImplantDecayHistograms();
 
 }
 
 void CorrelationManager::RunDecayGermaniumCorrelation(){
 
-  std::cout << "Correlating matched decays to germaniums" << std::endl;
+  Logger::Log("Correlating matched decays to germaniums");
   CorrelateDecayGermaniums();
-  // std::cout << "Filling decay germanium histograms" << std::endl;
-  // FillImplantDecayHistograms();
+  Logger::Log("Number of matched gammas identified: " + std::to_string(matchedGammaCounter));
 
 }

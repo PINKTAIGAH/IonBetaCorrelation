@@ -1,7 +1,8 @@
-#include <iostream>
+#include <string>
 
 #include "TFile.h"
 
+#include "Logger.hh"
 #include "TreeManager.hh"
 #include "HistogramManager.hh"
 #include "CorrelationManager.hh"
@@ -17,16 +18,16 @@ void IonBeta(const char* inputFileName, const char* outputFileName){
   TFile* inputFile = TFile::Open(inputFileName);
   if (!inputFile){
     delete inputFile; // Clean up
-    std::cerr << "Error: Could not open file " << std::endl;
-   std::exit(1);
+    Logger::Log("Could not open file ", Logger::Level::FATAL);
+    std::exit(1);
   }
-  std::cout << "\nFile loaded: "<< inputFile->GetName() << '\n' << std::endl;
+  Logger::Log( "File loaded: " + (std::string)inputFile->GetName() );
 
   // Open output file
   TFile* outputFile = new TFile(outputFileName, "RECREATE");
   if (!outputFile){
     delete outputFile;
-    std::cerr << "Error: Could not create output file " << std::endl;
+    Logger::Log("Could not create output file ", Logger::Level::FATAL);
     std::exit(1);
   }
 
@@ -50,6 +51,7 @@ void IonBeta(const char* inputFileName, const char* outputFileName){
 
   CorrelationManager* correlationManager = new CorrelationManager(eventMaps, histoManager);
   correlationManager->RunImplantDecayCorrelation();
+  correlationManager->RunDecayGermaniumCorrelation();
 
   // *************************************************************************************
   // ***************************** WRITE HISTOGRAMS **************************************

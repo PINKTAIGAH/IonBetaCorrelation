@@ -3,6 +3,7 @@
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 
+#include "Logger.hh"
 #include "TreeManager.hh"
 #include "AnatreeEventStructs.hh"
 
@@ -39,6 +40,8 @@ void TreeManager::InitialiseReaders(){
 }
 
 void TreeManager::FillMaps(){
+
+  Logger::ScopedTimer localTimer("Filling maps"); // Time method
 
   // Clear multimaps in case this method is ran twice
   implantEventMap.clear();
@@ -162,11 +165,11 @@ void TreeManager::FillMaps(){
 
 void TreeManager::LoadEvents(){
   
-  std::cout << "Initialising TTreeReaders..." << std::endl;
+  Logger::Log("Initialising TTreeReaders..");
   InitialiseReaders();
-  std::cout << "Filling maps with events..." << std::endl;
+  Logger::Log("Filling maps with events...");
   FillMaps();
-  std::cout << "Events succesfully loaded!" << std::endl;
+  Logger::Log("Events succesfully loaded!");
 
 }
 

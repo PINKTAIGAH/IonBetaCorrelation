@@ -4,10 +4,13 @@
 #include <utility>
 #include <vector>
 
+#include "TObject.h"
+
 // *************************************************************************************
 // ****************************** DEFINE STRUCTS ***************************************
 // *************************************************************************************
 
+struct PromptWindow {Long64_t start; Long64_t end;};
 struct ClusterRange {int min; int max;};
 struct ForwardBackwardPair {int forward; int backward;};
 struct XYPair {ClusterRange x; ClusterRange y;};

@@ -1,3 +1,4 @@
+#include "Logger.hh"
 #include "HistogramManager.hh"
 
 // Constructor
@@ -256,6 +257,8 @@ void HistogramManager::InitialiseHistograms(){
 // Public
 
 void HistogramManager::WriteHistograms(){
+
+  Logger::Log("Writitng histograms...");
 
   outputFile->cd();
 
