@@ -3,22 +3,39 @@
 #include "Logger.hh"
 #include "IonBeta.hh"
 #include "ConfigReader.hh"
+#include "ArgumentParser.hh"
 
-int main (int argc, const char** argv){
+int main (int argc, char* argv[]){
+  
+  // Initialte scoped timer for program runtime
+  Logger::ScopedTimer programTimer("Program ionbeta");
 
-  Logger::ScopedTimer programTimer("Program IonBeta");
+  // Define program flags
+  ArgumentParser::Instance().AddFlag("I", "Input file path", true);
+  ArgumentParser::Instance().AddFlag("C", "Config file", true);
+  ArgumentParser::Instance().AddFlag("I2", "Secondary input file path", false, "input.root");
+  ArgumentParser::Instance().AddFlag("O", "Output file path", false, "output.root");
+  ArgumentParser::Instance().AddFlag("v", "Verbose mode", false);
+  ArgumentParser::Instance().AddFlag("help", "Show help message", false);
 
-  if ( argc != 3 ){
-    Logger::Log("Program call must follow the following structure: ./ionbeta <Input File> <Output File> \n", Logger::Level::FATAL);
+  // Parse arguments
+  if (!ArgumentParser::Instance().Parse(argc, argv)){
+    ArgumentParser::Instance().PrintHelp(); 
+    Logger::Log("Required parameters not provided to program", Logger::Level::FATAL);
     return 1;
   }
 
-  ConfigReader* config = new ConfigReader("../config/ionBeta.cfg");
+  // Check if help flag called 
+  if (ArgumentParser::Instance().HasFlag("help")){
+    ArgumentParser::Instance().PrintHelp(); 
+    return 0;
+  }
+
+  ConfigReader::Instance().Initialise(ArgumentParser::Instance().GetValue("C"));
+  if (ArgumentParser::Instance().HasFlag("v")) ConfigReader::Instance().PrintConfigValues();
 
   // Call IonBeta Function (Main action function)
-  IonBeta(argv[1], argv[2]);
-
-  delete config;
+  IonBeta();
 
   Logger::Log("Program has run succesfully!");
 

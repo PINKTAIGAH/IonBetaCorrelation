@@ -8,8 +8,8 @@
 // Logger Methods
 
 void Logger::Log(const std::string& message, Level level){
-  std::cout << '[' << GetCurrentTime() << ']' 
-            << '[' << LevelToString(level) << "] "
+  std::cout << '[' << Colours::CYAN << GetCurrentTime() << Colours::RESET << ']' 
+            << '[' << GetLevelColour(level) << LevelToString(level) << Colours::RESET << "] "
             << message << std::endl;
 }
 
@@ -33,6 +33,17 @@ std::string Logger::LevelToString(Level level){
     case Level::DEBUG: return "DEBUG";
     case Level::FATAL: return "FATAL";
     default: return "UNKNOWN";
+  }
+}
+
+std::string Logger::GetLevelColour(Level level){
+  switch (level){
+    case Level::INFO: return Colours::GREEN;
+    case Level::WARNING: return Colours::YELLOW;
+    case Level::ERROR: return Colours::RED;
+    case Level::DEBUG: return Colours::BLUE;
+    case Level::FATAL: return Colours::RED;
+    default: return Colours::WHITE;
   }
 }
 

@@ -1,19 +1,34 @@
+#include <sstream>
+
 #include "TObjArray.h"
 #include "TObjString.h"
 
 #include "Logger.hh"
 #include "ConfigReader.hh"
 
-
 // Constructor
-ConfigReader::ConfigReader(const std::string configFile){
+
+ConfigReader::ConfigReader() {};
+
+ConfigReader& ConfigReader::Instance(){
+  static ConfigReader instance;
+  return instance;
+}
+
+void ConfigReader::Initialise(const std::string configFile){
+  if (initialised){
+    Logger::Log("ConfigReader already initialised. Skipping", Logger::Level::WARNING);
+    return;
+  }
   this->configFile = configFile;
   LoadConfig();
+  initialised = true;
 
   if (unsuccesfulConfigReading) {
     Logger::Log("Could not read config file succesfully", Logger::Level::FATAL);
     std::exit(1);
   }
+
 
 }
 
@@ -58,7 +73,7 @@ void ConfigReader::KeyExists(const TString& key){
   unsuccesfulConfigReading = true;
 }
 
-std::vector<Int_t> ParseStringToVector(TString& csvString){
+std::vector<Int_t> ConfigReader::ParseStringToVector(TString& csvString){
   std::vector<Int_t> result;
   TObjArray* tokens = csvString.Tokenize(",");
   for (int idx=0; idx < tokens->GetEntries(); ++idx){
@@ -144,7 +159,7 @@ void ConfigReader::SetAllowAjacentClusters(){
 }
 
 void ConfigReader::SetBetaGammaCandidateCut(){
-  TString key = "betaGammmaCandidateCut";
+  TString key = "betaGammaCandidateCut";
   KeyExists(key);  
   betaGammaCandidateCut = env->GetValue(key, numSentinel);
 }
@@ -179,18 +194,47 @@ void ConfigReader::SetBrokenAidaStripsDecayY(){
 
 // Public
 
-std::string ConfigReader::GetIsotopeName(){ return std::string(isotopeName); }
-Long64_t ConfigReader::GetTimeScale(){ return timeScale; }
-Long64_t ConfigReader::GetTimeThreshold(){ return timeThreshold; }
-PromptWindow ConfigReader::GetDecayGammaWindow(){ return decayGammaWindow; }
-PromptWindow ConfigReader::GetGammaGammaWindow(){ return gammaGammaWindow; }
-ULong64_t ConfigReader::GetImplantDeadTime(){ return implantDeadTime; }
-Double_t ConfigReader::GetLocalDeadTimePositionWindow(){ return localDeadTimePositionWindow; }
-bool ConfigReader::GetVetoInterruptedImplants(){ return vetoInterruptedImplants; }
-bool ConfigReader::GetOnlyOffspillDecays(){ return onlyOffspillDecays; }
-bool ConfigReader::GetAllowAjacentClusters(){ return allowAjacentClusters; }
-Int_t ConfigReader::GetBetaGammaCandidateCut(){ return betaGammaCandidateCut; }
-std::vector<Int_t> ConfigReader::GetBrokenAidaStripsImplantX(){ return brokenAidaStripsImplantX; }
-std::vector<Int_t> ConfigReader::GetBrokenAidaStripsImplantY(){ return brokenAidaStripsImplantY; }
-std::vector<Int_t> ConfigReader::GetBrokenAidaStripsDecayX(){ return brokenAidaStripsDecayX; }
-std::vector<Int_t> ConfigReader::GetBrokenAidaStripsDecayY(){ return brokenAidaStripsDecayY; }
+void ConfigReader::PrintConfigValues(){
+
+  // Lambda for vector to string
+  auto VectorToString = [](const std::vector<Int_t>& vector) -> std::string{
+    std::ostringstream oss;
+    for (size_t idx=0; idx<vector.size(); ++idx){
+      oss << vector[idx];
+      if ( idx < vector.size()-1 ) oss << ", ";
+    }
+    return oss.str();
+  };
+
+  Logger::Log("Config -> Isotope Name: " + std::string(isotopeName.Data()), Logger::Level::DEBUG);
+  Logger::Log("Config -> Time Scale: " + std::to_string(timeScale), Logger::Level::DEBUG);
+  Logger::Log("Config -> Time Threshold: " + std::to_string(timeThreshold), Logger::Level::DEBUG);
+  Logger::Log("Config -> Decay Gamma Window: (" + std::to_string(decayGammaWindow.start) + "," + std::to_string(decayGammaWindow.end) + ")", Logger::Level::DEBUG);
+  Logger::Log("Config -> Gamma Gamma Window: (" + std::to_string(gammaGammaWindow.start) + "," + std::to_string(gammaGammaWindow.end) + ")", Logger::Level::DEBUG);
+  Logger::Log("Config -> Implant Deadtime: " + std::to_string(implantDeadTime), Logger::Level::DEBUG);
+  Logger::Log("Config -> Local Deadtime Positiion Window: " + std::to_string(localDeadTimePositionWindow), Logger::Level::DEBUG);
+  Logger::Log("Config -> Veto Interrupted Implants: " + std::to_string(vetoInterruptedImplants), Logger::Level::DEBUG);
+  Logger::Log("Config -> Only Offspill Decays: " + std::to_string(onlyOffspillDecays), Logger::Level::DEBUG);
+  Logger::Log("Config -> Allow Ajacent Clusters: " + std::to_string(allowAjacentClusters), Logger::Level::DEBUG);
+  Logger::Log("Config -> Beta Gamma Candidate Cut: " + std::to_string(betaGammaCandidateCut), Logger::Level::DEBUG);
+  Logger::Log("Config -> Broken Aida Strips Implant X: " + VectorToString(brokenAidaStripsImplantX), Logger::Level::DEBUG);
+  Logger::Log("Config -> Broken Aida Strips Implant Y: " + VectorToString(brokenAidaStripsImplantY), Logger::Level::DEBUG);
+  Logger::Log("Config -> Broken Aida Strips Decay X: " + VectorToString(brokenAidaStripsDecayX), Logger::Level::DEBUG);
+  Logger::Log("Config -> Broken Aida Strips Decay Y: " + VectorToString(brokenAidaStripsDecayY), Logger::Level::DEBUG);
+}
+
+std::string ConfigReader::GetIsotopeName() const{ return std::string(isotopeName); }
+Long64_t ConfigReader::GetTimeScale() const{ return timeScale; }
+Long64_t ConfigReader::GetTimeThreshold() const{ return timeThreshold; }
+PromptWindow ConfigReader::GetDecayGammaWindow() const{ return decayGammaWindow; }
+PromptWindow ConfigReader::GetGammaGammaWindow() const{ return gammaGammaWindow; }
+ULong64_t ConfigReader::GetImplantDeadTime() const{ return implantDeadTime; }
+Double_t ConfigReader::GetLocalDeadTimePositionWindow() const{ return localDeadTimePositionWindow; }
+bool ConfigReader::GetVetoInterruptedImplants() const{ return vetoInterruptedImplants; }
+bool ConfigReader::GetOnlyOffspillDecays() const{ return onlyOffspillDecays; }
+bool ConfigReader::GetAllowAjacentClusters() const{ return allowAjacentClusters; }
+Int_t ConfigReader::GetBetaGammaCandidateCut() const{ return betaGammaCandidateCut; }
+std::vector<Int_t> ConfigReader::GetBrokenAidaStripsImplantX() const{ return brokenAidaStripsImplantX; }
+std::vector<Int_t> ConfigReader::GetBrokenAidaStripsImplantY() const{ return brokenAidaStripsImplantY; }
+std::vector<Int_t> ConfigReader::GetBrokenAidaStripsDecayX() const{ return brokenAidaStripsDecayX; }
+std::vector<Int_t> ConfigReader::GetBrokenAidaStripsDecayY() const{ return brokenAidaStripsDecayY; }

@@ -14,29 +14,37 @@
 class ConfigReader{
   
   public:
+    // Singleton Methods
+    static ConfigReader& Instance();
 
-    // Constructor
-    ConfigReader(const std::string configFile);
-    ~ConfigReader() = default;
+    void Initialise(const std::string configFile);
+    void PrintConfigValues();
 
     // Getters for parameters in config
-    std::string GetIsotopeName();
-    Long64_t GetTimeScale();
-    Long64_t GetTimeThreshold();
-    PromptWindow GetDecayGammaWindow();
-    PromptWindow GetGammaGammaWindow();
-    ULong64_t GetImplantDeadTime();
-    Double_t GetLocalDeadTimePositionWindow();
-    bool GetVetoInterruptedImplants();
-    bool GetOnlyOffspillDecays();
-    bool GetAllowAjacentClusters();
-    Int_t GetBetaGammaCandidateCut();
-    std::vector<Int_t> GetBrokenAidaStripsImplantX();
-    std::vector<Int_t> GetBrokenAidaStripsImplantY();
-    std::vector<Int_t> GetBrokenAidaStripsDecayX();
-    std::vector<Int_t> GetBrokenAidaStripsDecayY();
+    std::string GetIsotopeName() const;
+    Long64_t GetTimeScale() const;
+    Long64_t GetTimeThreshold() const;
+    PromptWindow GetDecayGammaWindow() const;
+    PromptWindow GetGammaGammaWindow() const;
+    ULong64_t GetImplantDeadTime() const;
+    Double_t GetLocalDeadTimePositionWindow() const;
+    bool GetVetoInterruptedImplants() const;
+    bool GetOnlyOffspillDecays() const;
+    bool GetAllowAjacentClusters() const;
+    Int_t GetBetaGammaCandidateCut() const;
+    std::vector<Int_t> GetBrokenAidaStripsImplantX() const;
+    std::vector<Int_t> GetBrokenAidaStripsImplantY() const;
+    std::vector<Int_t> GetBrokenAidaStripsDecayX() const;
+    std::vector<Int_t> GetBrokenAidaStripsDecayY() const;
 
   private:
+
+    // Singleton implementation
+    explicit ConfigReader();
+    ConfigReader(const ConfigReader&) = delete;
+    ConfigReader& operator=(const ConfigReader&) = delete;
+
+    bool initialised = false;
 
     // TEnv Object
     std::unique_ptr<TEnv> env;

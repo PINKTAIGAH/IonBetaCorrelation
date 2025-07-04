@@ -72,7 +72,6 @@ class CorrelationManager {
     std::multimap<ULong64_t, DecayEvent>* decayEventMap;
     std::multimap<ULong64_t, GermaniumEvent>* germaniumEventMap;
     std::unique_ptr<TimeRangeManagerLocal> deadtimeWindowManager;
-    Int_t gatedImplantCounter;
 
     // Class Members
     std::multimap<ULong64_t, ImplantDecayCorrelationEvent> implantDecayCorrelatedEventMap;
@@ -85,7 +84,7 @@ class CorrelationManager {
     void CorrelateImplantDecays();
     void FillImplantDecayHistograms();
     void CorrelateDecayGermaniums();
-
+    void FillGermaniumHistograms();
 
   public:
 

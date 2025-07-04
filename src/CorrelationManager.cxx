@@ -34,8 +34,10 @@ CorrelationManager::CorrelationManager(EventMaps eventMaps, HistogramManager* hi
   this->histogramManager = histogramManager;
 
   // Assign number of gated implants
-  gatedImplantCounter = gatedImplantEventMap->size();
-  Logger::Log("Number of " + Global::isotopeName + "in file: " + std::to_string(gatedImplantCounter));
+  Logger::Log("Number of implants in file: " + std::to_string(implantEventMap->size()));
+  Logger::Log("Number of " + Global::isotopeName + " in file: " + std::to_string(gatedImplantEventMap->size()));
+  Logger::Log("Number of decays in file: " + std::to_string(decayEventMap->size()));
+  Logger::Log("Number of gammas in file: " + std::to_string(germaniumEventMap->size()));
 
   // Initialise and fill deadtime window
   InitialiseDeadtimeWindowManager();
@@ -464,6 +466,40 @@ void CorrelationManager::CorrelateDecayGermaniums(){
 
 }
 
+void CorrelationManager::FillGermaniumHistograms(){
+
+  Logger::ScopedTimer localTimer("Filling gamma histograms"); // Time method
+
+  for (auto germaniumItr = germaniumEventMap->begin(); germaniumItr != germaniumEventMap->end(); ++germaniumItr){
+
+    // Unpack germanium event 
+    auto& germaniumEvent = germaniumItr->second;
+
+    histogramManager->h1_gamma_spectrum->Fill(germaniumEvent.e);
+
+    // Get decay loop bounds
+    auto decayItrLowerBound = decayEventMap->lower_bound(germaniumEvent.time + Global::decayGammaWindow.start - 50e3);
+    auto decayItrUpperBound = decayEventMap->upper_bound(germaniumEvent.time + Global::decayGammaWindow.end + 50e3);
+
+    for (auto decayItr = decayItrLowerBound; decayItr != decayItrUpperBound; ++decayItr){
+
+      // Unpack germanium event 
+      auto& decayEvent = decayItr->second;
+      Long64_t betaGammaTimediff = (Long64_t)germaniumEvent.time - (Long64_t)decayEvent.time;
+
+      histogramManager->h1_implantbetagamma_spectrum_before_ionbeta_dt->Fill(betaGammaTimediff);
+      histogramManager->h2_implantbetagamma_spectrum_before_ionbeta_dt_energy->Fill(betaGammaTimediff, germaniumEvent.e);
+
+      // Check if beta is in window
+      if ( !(betaGammaTimediff > Global::decayGammaWindow.start && betaGammaTimediff < Global::decayGammaWindow.end) ) continue;
+      histogramManager->h1_implantbetagamma_spectrum_before_ionbeta->Fill(germaniumEvent.e);
+
+    }
+
+  }
+
+}
+
 
 // Public Methods
 void CorrelationManager::RunImplantDecayCorrelation(){
@@ -478,6 +514,8 @@ void CorrelationManager::RunImplantDecayCorrelation(){
 
 void CorrelationManager::RunDecayGermaniumCorrelation(){
 
+  Logger::Log("Correlating all decays to germnaoums");
+  FillGermaniumHistograms();
   Logger::Log("Correlating matched decays to germaniums");
   CorrelateDecayGermaniums();
   Logger::Log("Number of matched gammas identified: " + std::to_string(matchedGammaCounter));
