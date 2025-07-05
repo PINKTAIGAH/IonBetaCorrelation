@@ -85,6 +85,7 @@ class CorrelationManager {
     void FillImplantDecayHistograms();
     void CorrelateDecayGermaniums();
     void FillGermaniumHistograms();
+    void FillDecayHistograms();
 
   public:
 

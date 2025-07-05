@@ -3,6 +3,7 @@
 
 #include <utility>
 #include <vector>
+#include <string>
 
 #include "TObject.h"
 
@@ -23,5 +24,7 @@ bool IsNoisyStrip(std::vector<int> noisyStripVector, ClusterRange decayClusterRa
 bool IsStripOverlaping(int strip, ClusterRange clusterRange);
 bool IsOverlapping1D(ClusterRange clusterRange, ClusterRange otherClusterRange, bool allowAjacents);
 bool AreClustersOverlapping(XYPair cluster, XYPair otherCluster, bool allowAjacents);
+
+std::string GetClusterStrings(XYPair cluster);
 
 #endif

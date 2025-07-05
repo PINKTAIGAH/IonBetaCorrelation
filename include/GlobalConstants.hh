@@ -20,7 +20,7 @@ namespace Global{
 
   const bool vetoInterruptedImplants = true;
   const bool onlyOffspillDecays = false;
-  const bool allowAjacentCusters = false;
+  const bool allowAjacentCusters = true;
 
   const Int_t betaGammaCandidateCut = 5;
 

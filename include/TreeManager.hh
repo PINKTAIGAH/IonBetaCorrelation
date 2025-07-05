@@ -6,6 +6,7 @@
 #include <string>
 
 #include "TFile.h"
+#include "TChain.h"
 #include "TObject.h"
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
@@ -52,12 +53,8 @@ class TreeManager{
   private:
   
     // Variables
+    std::unordered_map<std::string, TChain*> chainMap;
     TFile* inputFile;   
-
-    std::unique_ptr<TTreeReader> implantReader;
-    std::unique_ptr<TTreeReader> gatedImplantReader;
-    std::unique_ptr<TTreeReader> decayReader;
-    std::unique_ptr<TTreeReader> germaniumReader;
 
     std::multimap<ULong64_t, ImplantEvent> implantEventMap;
     std::multimap<ULong64_t, ImplantEvent> gatedImplantEventMap;
@@ -65,13 +62,12 @@ class TreeManager{
     std::multimap<ULong64_t, GermaniumEvent> germaniumEventMap;
 
     // Methods
-    void InitialiseReaders();
     void FillMaps();
 
   public:
 
-    TreeManager(TFile* inputFile);
-    ~TreeManager();
+    TreeManager(std::unordered_map<std::string, TChain*> chains);
+    ~TreeManager() = default;
 
     void LoadEvents();
     EventMaps GetEventMaps();

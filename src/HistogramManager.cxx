@@ -112,6 +112,8 @@ HistogramManager::~HistogramManager(){
   delete h2_implantenergy_candidatemultiplicity_forwards_unknowngamma_match;
   delete h2_clustersize_candidatemultiplicity_forwards_unknowngamma_match;
   delete h1_clustersize_forwards_unknowngamma_match;
+  delete h2_betagamma_spectrum_before_ionbeta_decay_exy;
+  delete h2_beta_decay_exy;
 
 }
 
@@ -145,6 +147,8 @@ void HistogramManager::InitialiseHistograms(){
   h1_implantbetagamma_spectrum_before_ionbeta = new TH1D("implantbetagamma_spectrum_before_ionbeta", "Beta-Gamma Energy Spectrum (all); Energy (keV); Counts/keV", 2000, 0, 2000);
   h1_implantbetagamma_spectrum_before_ionbeta_dt = new TH1D("implantbetagamma_spectrum_dt", "Decay Germanium dt; Time (ns); Counts", 2000, -30000, 2000);
   h2_implantbetagamma_spectrum_before_ionbeta_dt_energy = new TH2D("h2_implantbetagamma_spectrum_before_ionbeta_dt_energy", "Time between beta decay and gamma ray vs energy (keV); Time (ns); Energy (keV); Counts", 500, -20e3, 2e3, 2000, 0, 2000);
+  h2_beta_decay_exy = new TH2D("h2_beta_decay_exy", "DecayGamma Energy xy", 1000/20, 0, 1000, 1000/20, 0, 1000);
+  h2_betagamma_spectrum_before_ionbeta_decay_exy = new TH2D("h2_betagamma_spectrum_before_ionbeta_decay_exy", "DecayGamma Energy xy", 1000/20, 0, 1000, 1000/20, 0, 1000);
 
   // Histograms for implant-beta-gamma backward correlated events
   h1_gatedimplantbetagamma_spectrum_after_ionbeta_backwardmatch = new TH1D("gatedimplantbetagamma_spectrum_after_ionbeta_backwardmatch", "Implant-Beta-Gamma Energy Spectrum (backward ionbeta matched)); Energy (keV); Counts/keV", 2000, 0, 2000);
@@ -391,6 +395,8 @@ void HistogramManager::WriteHistograms(){
   h1_implantbetagamma_spectrum_before_ionbeta->Write();
   h1_implantbetagamma_spectrum_before_ionbeta_dt->Write();
   h2_implantbetagamma_spectrum_before_ionbeta_dt_energy->Write();
+  h2_betagamma_spectrum_before_ionbeta_decay_exy->Write();
+  h2_beta_decay_exy->Write();
   gFile->cd();
 
   TDirectory *knownGammaCoincidences = outputFile->mkdir("known_gamma_matches");

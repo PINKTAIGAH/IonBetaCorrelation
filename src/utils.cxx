@@ -30,12 +30,16 @@ bool IsNoisyStrip(std::vector<int> noisyStripVector, ClusterRange decayClusterRa
 bool IsOverlapping1D(ClusterRange clusterRange, ClusterRange otherClusterRange, bool allowAjacents){
 
   if (allowAjacents) return clusterRange.max >= otherClusterRange.min && otherClusterRange.max >= clusterRange.min;
-  else return clusterRange.max >= otherClusterRange.min && otherClusterRange.max >= clusterRange.min;
+  else return clusterRange.max > otherClusterRange.min && otherClusterRange.max > clusterRange.min;
   
 }
 
 bool AreClustersOverlapping(XYPair cluster, XYPair otherCluster, bool allowAjacents){
 
   return IsOverlapping1D(cluster.x, otherCluster.x, allowAjacents) && IsOverlapping1D(cluster.y, otherCluster.y, allowAjacents);
+}
+
+std::string GetClusterStrings(XYPair cluster){
+  return "X(" + std::to_string(cluster.x.min) + "," + std::to_string(cluster.x.max) + ") Y("+ std::to_string(cluster.y.min) + "," + std::to_string(cluster.y.max) + ") ";
 }
 

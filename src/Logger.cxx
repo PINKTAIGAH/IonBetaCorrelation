@@ -4,13 +4,21 @@
 #include <iostream>
 
 #include "Logger.hh"
+#include "ArgumentParser.hh"
 
 // Logger Methods
 
 void Logger::Log(const std::string& message, Level level){
-  std::cout << '[' << Colours::CYAN << GetCurrentTime() << Colours::RESET << ']' 
-            << '[' << GetLevelColour(level) << LevelToString(level) << Colours::RESET << "] "
-            << message << std::endl;
+
+  if (ArgumentParser::Instance().HasFlag("noansi")){
+    std::cout << '[' << GetCurrentTime() << ']' 
+              << '[' << LevelToString(level) << "] "
+              << message << std::endl;
+  }else{
+    std::cout << '[' << Colours::CYAN << GetCurrentTime() << Colours::RESET << ']' 
+              << '[' << GetLevelColour(level) << LevelToString(level) << Colours::RESET << "] "
+              << message << std::endl;
+  }
 }
 
 std::string Logger::GetCurrentTime(){

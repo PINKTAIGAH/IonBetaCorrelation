@@ -1,4 +1,6 @@
 #include "Logger.hh"
+#include "ConfigReader.hh"
+#include "ArgumentParser.hh"
 #include "GlobalConstants.hh"
 #include "CorrelationManager.hh"
 
@@ -108,7 +110,8 @@ void CorrelationManager::CorrelateImplantDecays(){
     auto  decayItrStart = decayEventMap->lower_bound((Long64_t)gatedImplantEvent.time);
     auto  decayItrEnd = decayEventMap->upper_bound((Long64_t)gatedImplantEvent.time + Global::timeThreshold);
 
-    for (auto decayItr = decayItrStart; decayItr != decayItrEnd; ++decayItr){
+    // for (auto decayItr = decayItrStart; decayItr != decayItrEnd; ++decayItr){
+    for (auto decayItr = decayEventMap->begin(); decayItr != decayEventMap->end(); ++decayItr){
 
       // Unpack gated implant event
       auto& decayEvent = decayItr->second;
@@ -122,15 +125,19 @@ void CorrelationManager::CorrelateImplantDecays(){
 
       // Skip if clusters aren't overlapping
       if ( !AreClustersOverlapping( {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, {{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}, Global::allowAjacentCusters ) ) continue;
+      if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Found! Implant : " + GetClusterStrings({{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}) + " Decays: " + GetClusterStrings({{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}), Logger::Level::DEBUG);
 
       // Determine timedifference between implant and decay
       Long64_t timediff = (Long64_t)decayEvent.time - (Long64_t)gatedImplantEvent.time;
+      if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Time Difference: " + std::to_string(timediff), Logger::Level::DEBUG);
 
       // Skip if implant and decay are not in time window (Shouldn't trigger due to lower and upper bounds)
       if (timediff < 0 || timediff > Global::timeThreshold) continue;
+      if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Time Difference is within threshold ", Logger::Level::DEBUG);
 
       // Check if decay is in a deadtime
       if (deadtimeWindowManager->Contains(decayEvent.time, decayEvent.x, decayEvent.y)){
+        if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Decay vetoed due to local implant deadtime ", Logger::Level::DEBUG);
         histogramManager->h1_deadtime_implant_vetoed_decay_candidates_time->Fill(decayEvent.time);
         continue;
       }
@@ -199,15 +206,19 @@ void CorrelationManager::CorrelateImplantDecays(){
 
       // Skip if clusters aren't overlapping
       if ( !AreClustersOverlapping( {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, {{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}, Global::allowAjacentCusters ) ) continue;
+      if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Found! Implant : " + GetClusterStrings({{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}) + " Decays: " + GetClusterStrings({{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}), Logger::Level::DEBUG);
 
       // Determine timedifference between implant and decay
       Long64_t timediff = (Long64_t)decayEvent.time - (Long64_t)gatedImplantEvent.time;
+      if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Time Difference: " + std::to_string(timediff), Logger::Level::DEBUG);
 
       // Skip if implant and decay are not in time window (Shouldn't trigger due to lower and upper bounds)
-      if (timediff > 0 || -timediff > Global::timeThreshold) continue;
+      if (-timediff < 0 || -timediff > Global::timeThreshold) continue;
+      if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Time Difference is within threshold ", Logger::Level::DEBUG);
 
       // Check if decay is in a deadtime
       if (deadtimeWindowManager->Contains(decayEvent.time, decayEvent.x, decayEvent.y)){
+        if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Decay vetoed due to local implant deadtime ", Logger::Level::DEBUG);
         histogramManager->h1_deadtime_implant_vetoed_decay_candidates_time->Fill(decayEvent.time);
         continue;
       }
@@ -377,6 +388,7 @@ void CorrelationManager::CorrelateDecayGermaniums(){
         // Unpack germanium event & find timediff
         auto& germaniumEvent = germaniumItr->second;
         Long64_t betaGammaTimediff =  (Long64_t)germaniumEvent.time - (Long64_t)betaCandidateEvent.decayTime;
+        if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Beta Gamma time difference: " + std::to_string(betaGammaTimediff), Logger::Level::DEBUG);
 
         // Fill histos
         histogramManager->h2_gatedimplantbetagamma_betagamma_dt_vs_implantbeta_dt->Fill(betaCandidateEvent.timediff, betaGammaTimediff);
@@ -391,6 +403,7 @@ void CorrelationManager::CorrelateDecayGermaniums(){
 
         // Check if germanium event is in prompt window
         if ( ! (betaGammaTimediff > Global::decayGammaWindow.start && betaGammaTimediff < Global::decayGammaWindow.end) ) continue;
+        if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Beta Gamma are correlated!", Logger::Level::DEBUG);
 
         // Forward Correlation
         if (betaCandidateEvent.correlationType == CorrelationType::FORWARDS){
@@ -493,9 +506,23 @@ void CorrelationManager::FillGermaniumHistograms(){
       // Check if beta is in window
       if ( !(betaGammaTimediff > Global::decayGammaWindow.start && betaGammaTimediff < Global::decayGammaWindow.end) ) continue;
       histogramManager->h1_implantbetagamma_spectrum_before_ionbeta->Fill(germaniumEvent.e);
-
+      histogramManager->h2_betagamma_spectrum_before_ionbeta_decay_exy->Fill(decayEvent.eX, decayEvent.eY);
     }
 
+  }
+
+}
+
+void CorrelationManager::FillDecayHistograms(){
+
+  Logger::ScopedTimer("Filling decay histograms");
+
+  for (auto decayItr = decayEventMap->begin(); decayItr != decayEventMap->end(); ++decayItr){
+    // Unpack germanium event 
+    auto& decayEvent = decayItr->second;
+  
+    // Fill Histogram
+    histogramManager->h2_beta_decay_exy->Fill(decayEvent.eX, decayEvent.eY);
   }
 
 }
@@ -514,7 +541,9 @@ void CorrelationManager::RunImplantDecayCorrelation(){
 
 void CorrelationManager::RunDecayGermaniumCorrelation(){
 
-  Logger::Log("Correlating all decays to germnaoums");
+  Logger::Log("Filling decay histograms");
+  FillDecayHistograms();
+  Logger::Log("Correlating all decays to germaniums");
   FillGermaniumHistograms();
   Logger::Log("Correlating matched decays to germaniums");
   CorrelateDecayGermaniums();

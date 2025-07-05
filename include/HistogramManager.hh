@@ -15,7 +15,7 @@ namespace HistogramConstants {
   const Double_t slicesEvery = 1;                                                     // Size of white rabbit histogram bins
   const Long64_t durationInSeconds = (wrExperimentEnd - wrExperimentStart) / 1e9;     // Duration of experiment
   const Long64_t numberOfSlices = durationInSeconds / slicesEvery;                    // Number of white rabbit histogram bins
-  const Double_t implantDecayBinDt = 1e6;
+  const Double_t implantDecayBinDt = 2e6;
   const Long64_t implantDecayBins = 2 * Global::timeThreshold / implantDecayBinDt;
 
 }
@@ -57,6 +57,8 @@ class HistogramManager{
     TH1D* h1_implantbetagamma_spectrum_before_ionbeta;
     TH1D* h1_implantbetagamma_spectrum_before_ionbeta_dt;
     TH2D* h2_implantbetagamma_spectrum_before_ionbeta_dt_energy;
+    TH2D* h2_betagamma_spectrum_before_ionbeta_decay_exy;
+    TH2D* h2_beta_decay_exy;
 
     // Histograms for implant-beta-gamma backward correlated events
     TH1D* h1_gatedimplantbetagamma_spectrum_after_ionbeta_backwardmatch;
