@@ -37,7 +37,7 @@ CorrelationManager::CorrelationManager(EventMaps eventMaps, HistogramManager* hi
 
   // Assign number of gated implants
   Logger::Log("Number of implants in file: " + std::to_string(implantEventMap->size()));
-  Logger::Log("Number of " + Global::isotopeName + " in file: " + std::to_string(gatedImplantEventMap->size()));
+  Logger::Log("Number of " + ConfigReader::Instance().GetIsotopeName() + " in file: " + std::to_string(gatedImplantEventMap->size()));
   Logger::Log("Number of decays in file: " + std::to_string(decayEventMap->size()));
   Logger::Log("Number of gammas in file: " + std::to_string(germaniumEventMap->size()));
 
@@ -50,7 +50,7 @@ CorrelationManager::CorrelationManager(EventMaps eventMaps, HistogramManager* hi
 // Private Methods
 
 void CorrelationManager::InitialiseDeadtimeWindowManager(){
-  deadtimeWindowManager = std::make_unique<TimeRangeManagerLocal>(Global::localDeadTimePositionWindow); 
+  deadtimeWindowManager = std::make_unique<TimeRangeManagerLocal>(ConfigReader::Instance().GetLocalDeadTimePositionWindow()); 
 }
 
 void CorrelationManager::TagImplants(){
@@ -64,7 +64,7 @@ void CorrelationManager::TagImplants(){
 
     deadtimeWindowManager->AddRange(
       implantEvent.time,
-      implantEvent.time + Global::implantDeadTime,
+      implantEvent.time + ConfigReader::Instance().GetImplantDeadTime(),
       implantEvent.x,
       implantEvent.y
     );
@@ -92,8 +92,8 @@ void CorrelationManager::CorrelateImplantDecays(){
     auto& gatedImplantEvent = gatedImplantItr->second;
 
     // Veto implant event if overlapping with noisy strip in HEC
-    if ( IsNoisyStrip(Global::BROKEN_AIDA_X_STRIPS_IMPLANT, {gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}) ) continue;
-    if ( IsNoisyStrip(Global::BROKEN_AIDA_Y_STRIPS_IMPLANT, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}) ) continue;
+    if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsImplantX(), {gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}) ) continue;
+    if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsImplantY(), {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}) ) continue;
 
     // Fill histogram
     histogramManager->h2_aida_implant_xy->Fill(gatedImplantEvent.x, gatedImplantEvent.y); 
@@ -108,7 +108,7 @@ void CorrelationManager::CorrelateImplantDecays(){
 
     // Find Lower and upper bounds for decays
     auto  decayItrStart = decayEventMap->lower_bound((Long64_t)gatedImplantEvent.time);
-    auto  decayItrEnd = decayEventMap->upper_bound((Long64_t)gatedImplantEvent.time + Global::timeThreshold);
+    auto  decayItrEnd = decayEventMap->upper_bound((Long64_t)gatedImplantEvent.time + ConfigReader::Instance().GetTimeThreshold());
 
     // for (auto decayItr = decayItrStart; decayItr != decayItrEnd; ++decayItr){
     for (auto decayItr = decayEventMap->begin(); decayItr != decayEventMap->end(); ++decayItr){
@@ -117,14 +117,14 @@ void CorrelationManager::CorrelateImplantDecays(){
       auto& decayEvent = decayItr->second;
 
       // Veto decay event if overlapping with noisy strip in HEC
-      if ( IsNoisyStrip(Global::BROKEN_AIDA_X_STRIPS_DECAY, {decayEvent.cminX, decayEvent.cmaxX}) ) continue;
-      if ( IsNoisyStrip(Global::BROKEN_AIDA_Y_STRIPS_DECAY, {decayEvent.cminY, decayEvent.cmaxY}) ) continue;
+      if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsDecayX(), {decayEvent.cminX, decayEvent.cmaxX}) ) continue;
+      if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsDecayY(), {decayEvent.cminY, decayEvent.cmaxY}) ) continue;
 
       // Check if we only analyse offspill
-      if ( Global::onlyOffspillDecays && decayEvent.spill == 1) continue;
+      if ( ConfigReader::Instance().GetOnlyOffspillDecays() && decayEvent.spill == 1) continue;
 
       // Skip if clusters aren't overlapping
-      if ( !AreClustersOverlapping( {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, {{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}, Global::allowAjacentCusters ) ) continue;
+      if ( !AreClustersOverlapping( {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, {{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}, ConfigReader::Instance().GetAllowAjacentClusters() ) ) continue;
       if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Found! Implant : " + GetClusterStrings({{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}) + " Decays: " + GetClusterStrings({{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}), Logger::Level::DEBUG);
 
       // Determine timedifference between implant and decay
@@ -132,7 +132,7 @@ void CorrelationManager::CorrelateImplantDecays(){
       if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Time Difference: " + std::to_string(timediff), Logger::Level::DEBUG);
 
       // Skip if implant and decay are not in time window (Shouldn't trigger due to lower and upper bounds)
-      if (timediff < 0 || timediff > Global::timeThreshold) continue;
+      if (timediff < 0 || timediff > ConfigReader::Instance().GetTimeThreshold()) continue;
       if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Time Difference is within threshold ", Logger::Level::DEBUG);
 
       // Check if decay is in a deadtime
@@ -187,7 +187,7 @@ void CorrelationManager::CorrelateImplantDecays(){
 
     // Find Lower and upper bounds for decays
     decayItrEnd = decayEventMap->lower_bound((Long64_t)gatedImplantEvent.time);
-    decayItrStart = decayEventMap->lower_bound((Long64_t)gatedImplantEvent.time - Global::timeThreshold);
+    decayItrStart = decayEventMap->lower_bound((Long64_t)gatedImplantEvent.time - ConfigReader::Instance().GetTimeThreshold());
 
     auto rbegin = std::make_reverse_iterator(decayItrStart);
     auto rend = std::make_reverse_iterator(decayItrEnd);
@@ -198,14 +198,14 @@ void CorrelationManager::CorrelateImplantDecays(){
       auto& decayEvent = decayItr->second;
 
       // Veto decay event if overlapping with noisy strip in HEC
-      if ( IsNoisyStrip(Global::BROKEN_AIDA_X_STRIPS_DECAY, {decayEvent.cminX, decayEvent.cmaxX}) ) continue;
-      if ( IsNoisyStrip(Global::BROKEN_AIDA_Y_STRIPS_DECAY, {decayEvent.cminY, decayEvent.cmaxY}) ) continue;
+      if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsDecayX(), {decayEvent.cminX, decayEvent.cmaxX}) ) continue;
+      if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsDecayY(), {decayEvent.cminY, decayEvent.cmaxY}) ) continue;
 
       // Check if we only analyse offspill
-      if ( Global::onlyOffspillDecays && decayEvent.spill == 1) continue;
+      if ( ConfigReader::Instance().GetOnlyOffspillDecays() && decayEvent.spill == 1) continue;
 
       // Skip if clusters aren't overlapping
-      if ( !AreClustersOverlapping( {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, {{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}, Global::allowAjacentCusters ) ) continue;
+      if ( !AreClustersOverlapping( {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, {{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}, ConfigReader::Instance().GetAllowAjacentClusters() ) ) continue;
       if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Found! Implant : " + GetClusterStrings({{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}) + " Decays: " + GetClusterStrings({{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}), Logger::Level::DEBUG);
 
       // Determine timedifference between implant and decay
@@ -213,7 +213,7 @@ void CorrelationManager::CorrelateImplantDecays(){
       if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Time Difference: " + std::to_string(timediff), Logger::Level::DEBUG);
 
       // Skip if implant and decay are not in time window (Shouldn't trigger due to lower and upper bounds)
-      if (-timediff < 0 || -timediff > Global::timeThreshold) continue;
+      if (-timediff < 0 || -timediff > ConfigReader::Instance().GetTimeThreshold()) continue;
       if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Time Difference is within threshold ", Logger::Level::DEBUG);
 
       // Check if decay is in a deadtime
@@ -365,8 +365,8 @@ void CorrelationManager::CorrelateDecayGermaniums(){
     auto& implantDecayMatchMultiplicity = implantDecayCorrelatedItr.second.implantDecayMatchMultiplicity;
     auto& betaCandidateEventVector = implantDecayCorrelatedItr.second.betaCandidateEventVector;
 
-    if ( implantDecayMatchMultiplicity.forward > Global::betaGammaCandidateCut ) skipForward = true;
-    if ( implantDecayMatchMultiplicity.backward > Global::betaGammaCandidateCut ) skipBackward = true;
+    if ( implantDecayMatchMultiplicity.forward > ConfigReader::Instance().GetBetaGammaCandidateCut() ) skipForward = true;
+    if ( implantDecayMatchMultiplicity.backward > ConfigReader::Instance().GetBetaGammaCandidateCut() ) skipBackward = true;
 
     // Loop over beta candidates
     for ( auto& betaCandidateEvent : betaCandidateEventVector ){
@@ -376,11 +376,11 @@ void CorrelationManager::CorrelateDecayGermaniums(){
       if ( skipBackward && betaCandidateEvent.correlationType == CorrelationType::BACKWARDS ) continue; 
 
       // Check if we only analyse offspill
-      if ( Global::onlyOffspillDecays && betaCandidateEvent.decaySpill == 1) continue;
+      if ( ConfigReader::Instance().GetOnlyOffspillDecays() && betaCandidateEvent.decaySpill == 1) continue;
 
       // Define lower bound and upper bounds for loops
-      auto germaniumItrStart = germaniumEventMap->lower_bound(betaCandidateEvent.decayTime - Global::decayGammaWindow.start - 10e3); // 10e3 before start of gamma window
-      auto germaniumItrEnd = germaniumEventMap->upper_bound(betaCandidateEvent.decayTime - Global::decayGammaWindow.end + 10e3); // 10e3 after end of gamma window
+      auto germaniumItrStart = germaniumEventMap->lower_bound(betaCandidateEvent.decayTime - ConfigReader::Instance().GetDecayGammaWindow().start - 10e3); // 10e3 before start of gamma window
+      auto germaniumItrEnd = germaniumEventMap->upper_bound(betaCandidateEvent.decayTime - ConfigReader::Instance().GetDecayGammaWindow().end + 10e3); // 10e3 after end of gamma window
       
       // Loop over all germaniums in bounds
       for (auto germaniumItr = germaniumItrStart; germaniumItr != germaniumItrEnd; ++germaniumItr){
@@ -402,7 +402,7 @@ void CorrelationManager::CorrelateDecayGermaniums(){
         }
 
         // Check if germanium event is in prompt window
-        if ( ! (betaGammaTimediff > Global::decayGammaWindow.start && betaGammaTimediff < Global::decayGammaWindow.end) ) continue;
+        if ( ! (betaGammaTimediff > ConfigReader::Instance().GetDecayGammaWindow().start && betaGammaTimediff < ConfigReader::Instance().GetDecayGammaWindow().end) ) continue;
         if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Beta Gamma are correlated!", Logger::Level::DEBUG);
 
         // Forward Correlation
@@ -418,8 +418,8 @@ void CorrelationManager::CorrelateDecayGermaniums(){
           histogramManager->h2_gatedimplantbetagamma_energy_vs_decaystrip_forwardmatch->Fill(betaCandidateEvent.decayPositionY + 400, germaniumEvent.e); // Add 400 to skip to part of histo containing y strips
 
           // Define lower bound and upper bounds for second germanium loop
-          auto otherGermaniumItrStart = germaniumEventMap->lower_bound(betaCandidateEvent.decayTime - Global::decayGammaWindow.start - 10e3); // 10e3 before start of gamma window
-          auto otherGermaniumItrEnd = germaniumEventMap->upper_bound(betaCandidateEvent.decayTime - Global::decayGammaWindow.end + 10e3); // 10e3 after end of gamma window
+          auto otherGermaniumItrStart = germaniumEventMap->lower_bound(betaCandidateEvent.decayTime - ConfigReader::Instance().GetDecayGammaWindow().start - 10e3); // 10e3 before start of gamma window
+          auto otherGermaniumItrEnd = germaniumEventMap->upper_bound(betaCandidateEvent.decayTime - ConfigReader::Instance().GetDecayGammaWindow().end + 10e3); // 10e3 after end of gamma window
 
           // Perform Gamma-Gamma Correlation
           for (auto otherGermaniumItr = otherGermaniumItrStart; otherGermaniumItr != otherGermaniumItrEnd; ++otherGermaniumItr){
@@ -434,7 +434,7 @@ void CorrelationManager::CorrelateDecayGermaniums(){
             histogramManager->h2_gatedimplantbetagamma_spectrum_after_ionbeta_square_time_forwardmatch->Fill(germaniumEvent.e, gammaGammaTimediff);
 
             // Fill GammaGamma Matrix if inside time window
-            if (gammaGammaTimediff > Global::gammaGammaWindow.start && gammaGammaTimediff < Global::gammaGammaWindow.end) histogramManager->h2_gatedimplantbetagamma_spectrum_after_ionbeta_square_forwardmatch->Fill(germaniumEvent.e, otherGermaniumEvent.e);
+            if (gammaGammaTimediff > ConfigReader::Instance().GetGammaGammaWindow().start && gammaGammaTimediff < ConfigReader::Instance().GetGammaGammaWindow().end) histogramManager->h2_gatedimplantbetagamma_spectrum_after_ionbeta_square_forwardmatch->Fill(germaniumEvent.e, otherGermaniumEvent.e);
 
           }
         
@@ -449,8 +449,8 @@ void CorrelationManager::CorrelateDecayGermaniums(){
           histogramManager->h2_gatedimplantbetagamma_energy_vs_decaystrip_backwardmatch->Fill(betaCandidateEvent.decayPositionY + 400, germaniumEvent.e); // Add 400 to skip to part of histo containing y strips
 
           // Define lower bound and upper bounds for second germanium loop
-          auto otherGermaniumItrStart = germaniumEventMap->lower_bound(betaCandidateEvent.decayTime - Global::decayGammaWindow.start - 10e3); // 10e3 before start of gamma window
-          auto otherGermaniumItrEnd = germaniumEventMap->upper_bound(betaCandidateEvent.decayTime - Global::decayGammaWindow.end + 10e3); // 10e3 after end of gamma window
+          auto otherGermaniumItrStart = germaniumEventMap->lower_bound(betaCandidateEvent.decayTime - ConfigReader::Instance().GetDecayGammaWindow().start - 10e3); // 10e3 before start of gamma window
+          auto otherGermaniumItrEnd = germaniumEventMap->upper_bound(betaCandidateEvent.decayTime - ConfigReader::Instance().GetDecayGammaWindow().end + 10e3); // 10e3 after end of gamma window
 
           // Perform Gamma-Gamma Correlation
           for (auto otherGermaniumItr = otherGermaniumItrStart; otherGermaniumItr != otherGermaniumItrEnd; ++otherGermaniumItr){
@@ -465,7 +465,7 @@ void CorrelationManager::CorrelateDecayGermaniums(){
             histogramManager->h2_gatedimplantbetagamma_spectrum_after_ionbeta_square_time_backwardmatch->Fill(germaniumEvent.e, gammaGammaTimediff);
 
             // Fill GammaGamma Matrix if inside time window
-            if (gammaGammaTimediff > Global::gammaGammaWindow.start && gammaGammaTimediff < Global::gammaGammaWindow.end) histogramManager->h2_gatedimplantbetagamma_spectrum_after_ionbeta_square_backwardmatch->Fill(germaniumEvent.e, otherGermaniumEvent.e);
+            if (gammaGammaTimediff > ConfigReader::Instance().GetGammaGammaWindow().start && gammaGammaTimediff < ConfigReader::Instance().GetGammaGammaWindow().end) histogramManager->h2_gatedimplantbetagamma_spectrum_after_ionbeta_square_backwardmatch->Fill(germaniumEvent.e, otherGermaniumEvent.e);
 
           }
 
@@ -491,8 +491,8 @@ void CorrelationManager::FillGermaniumHistograms(){
     histogramManager->h1_gamma_spectrum->Fill(germaniumEvent.e);
 
     // Get decay loop bounds
-    auto decayItrLowerBound = decayEventMap->lower_bound(germaniumEvent.time + Global::decayGammaWindow.start - 50e3);
-    auto decayItrUpperBound = decayEventMap->upper_bound(germaniumEvent.time + Global::decayGammaWindow.end + 50e3);
+    auto decayItrLowerBound = decayEventMap->lower_bound(germaniumEvent.time + ConfigReader::Instance().GetDecayGammaWindow().start - 50e3);
+    auto decayItrUpperBound = decayEventMap->upper_bound(germaniumEvent.time + ConfigReader::Instance().GetDecayGammaWindow().end + 50e3);
 
     for (auto decayItr = decayItrLowerBound; decayItr != decayItrUpperBound; ++decayItr){
 
@@ -504,7 +504,7 @@ void CorrelationManager::FillGermaniumHistograms(){
       histogramManager->h2_implantbetagamma_spectrum_before_ionbeta_dt_energy->Fill(betaGammaTimediff, germaniumEvent.e);
 
       // Check if beta is in window
-      if ( !(betaGammaTimediff > Global::decayGammaWindow.start && betaGammaTimediff < Global::decayGammaWindow.end) ) continue;
+      if ( !(betaGammaTimediff > ConfigReader::Instance().GetDecayGammaWindow().start && betaGammaTimediff < ConfigReader::Instance().GetDecayGammaWindow().end) ) continue;
       histogramManager->h1_implantbetagamma_spectrum_before_ionbeta->Fill(germaniumEvent.e);
       histogramManager->h2_betagamma_spectrum_before_ionbeta_decay_exy->Fill(decayEvent.eX, decayEvent.eY);
     }
