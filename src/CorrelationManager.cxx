@@ -110,8 +110,7 @@ void CorrelationManager::CorrelateImplantDecays(){
     auto  decayItrStart = decayEventMap->lower_bound((Long64_t)gatedImplantEvent.time);
     auto  decayItrEnd = decayEventMap->upper_bound((Long64_t)gatedImplantEvent.time + ConfigReader::Instance().GetTimeThreshold());
 
-    // for (auto decayItr = decayItrStart; decayItr != decayItrEnd; ++decayItr){
-    for (auto decayItr = decayEventMap->begin(); decayItr != decayEventMap->end(); ++decayItr){
+    for (auto decayItr = decayItrStart; decayItr != decayItrEnd; ++decayItr){
 
       // Unpack gated implant event
       auto& decayEvent = decayItr->second;
