@@ -22,6 +22,14 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         ${ROOT_LIBRARIES})                   
 
+link_directories($ENV{HOME}/openssl-1.1/lib)
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+        ${ROOT_LIBRARIES}
+        ssl crypto  # Add this explicitly
+)
+
+
 if(EXISTS "${ROOT_USE_FILE}")
     include(${ROOT_USE_FILE})
 endif()

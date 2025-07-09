@@ -66,7 +66,7 @@ class TreeManager{
 
   public:
 
-    TreeManager(std::unordered_map<std::string, TChain*> chains);
+    TreeManager(std::unordered_map<std::string, TChain*>& chains);
     ~TreeManager() = default;
 
     void LoadEvents();

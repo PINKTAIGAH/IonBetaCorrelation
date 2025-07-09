@@ -12,8 +12,6 @@ int main (int argc, char* argv[]){
 
   // Define program flags
   ArgumentParser::Instance().AddFlag("C", "Config file", true);
-  ArgumentParser::Instance().AddFlag("I", "Input file path", false);
-  ArgumentParser::Instance().AddFlag("I2", "Secondary input file path", false, "input.root");
   ArgumentParser::Instance().AddFlag("O", "Output file path", false, "output.root");
   ArgumentParser::Instance().AddFlag("v", "Verbose mode", false);
   ArgumentParser::Instance().AddFlag("help", "Show help message", false);

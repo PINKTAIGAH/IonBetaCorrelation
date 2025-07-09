@@ -1,18 +1,19 @@
 {
-  "configurations": [
-    {
-      "name": "macos",
-      "includePath": [
-        "${workspaceFolder}/**",
-        "/Users/giorgio/Projects/IonBetaCorrelation/include",
-        "/opt/homebrew/include/root"
-      ],
-      "defines": [],
-      "compilerPath": "/usr/bin/g++",
-      "cStandard": "c17",
-      "cppStandard": "c++17",
-      "intelliSenseMode": "macos-gcc-arm64"
-    }
-  ],
-  "version": 4
+    "configurations": [
+        {
+            "name": "Linux-Clang",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/cvmfs/fairsoft.gsi.de/debian12/fairsoft/nov22p1/include/root",
+                "/u/gbrunic/Projects/IonBetaCorrelation/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-clang-x64"
+
+        }
+    ],
+    "version": 4
 }

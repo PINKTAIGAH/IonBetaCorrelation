@@ -28,23 +28,12 @@ void IonBeta(){
 
   std::unordered_map<std::string, TChain*> chainMap = { {"implant", implantChain}, {"gatedImplant", gatedImplantChain}, {"decay", decayChain}, {"germanium", germaniumChain} };
 
-  for ( auto& fileName : ArgumentParser::Instance().GetPositionalArgs() ){ Logger::Log("Loaded input file: " + fileName); }
-
   // Fill chains with input files
   for (auto& itr : chainMap ){
     for ( auto& fileName : ArgumentParser::Instance().GetPositionalArgs() ){
       itr.second->Add(fileName.c_str());
     }
   }
-
-  // // Open input file
-  // TFile* inputFile = TFile::Open(ArgumentParser::Instance().GetValue("I").c_str());
-  // if (!inputFile){
-  //   delete inputFile; // Clean up
-  //   Logger::Log("Could not open input file ", Logger::Level::FATAL);
-  //   std::exit(1);
-  // }
-  // Logger::Log( "Input file loaded: " + (std::string)inputFile->GetName() );
 
   // Open output file
   TFile* outputFile = new TFile(ArgumentParser::Instance().GetValue("O").c_str(), "RECREATE");
@@ -66,7 +55,6 @@ void IonBeta(){
   // *************************************************************************************
 
   TreeManager* treeManager = new TreeManager(chainMap); 
-  // TreeManager* treeManager = new TreeManager(inputFile); 
   treeManager->LoadEvents();
   EventMaps eventMaps = treeManager->GetEventMaps();
 

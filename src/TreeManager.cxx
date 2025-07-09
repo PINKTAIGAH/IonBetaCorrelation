@@ -12,7 +12,7 @@
 
 // Constructor
 
-TreeManager::TreeManager(std::unordered_map<std::string, TChain*> chains){
+TreeManager::TreeManager(std::unordered_map<std::string, TChain*>& chains){
   this->chainMap = chains;
 }
 

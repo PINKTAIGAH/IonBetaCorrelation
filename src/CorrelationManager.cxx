@@ -107,12 +107,12 @@ void CorrelationManager::CorrelateImplantDecays(){
     // Loop over forward direction
 
     // Find Lower and upper bounds for decays
-    auto  decayItrStart = decayEventMap->lower_bound((Long64_t)gatedImplantEvent.time);
-    auto  decayItrEnd = decayEventMap->upper_bound((Long64_t)gatedImplantEvent.time + ConfigReader::Instance().GetTimeThreshold());
+    auto  decayItrStart = decayEventMap->lower_bound((Long64_t)gatedImplantEvent.time - ConfigReader::Instance().GetTimeThreshold());
+    auto  decayItrEnd = decayEventMap->upper_bound((Long64_t)gatedImplantEvent.time + 2 * ConfigReader::Instance().GetTimeThreshold());
 
     for (auto decayItr = decayItrStart; decayItr != decayItrEnd; ++decayItr){
 
-      // Unpack gated implant event
+      // Unpack decay event
       auto& decayEvent = decayItr->second;
 
       // Veto decay event if overlapping with noisy strip in HEC
@@ -185,8 +185,8 @@ void CorrelationManager::CorrelateImplantDecays(){
     // Loop over backward direction
 
     // Find Lower and upper bounds for decays
-    decayItrEnd = decayEventMap->lower_bound((Long64_t)gatedImplantEvent.time);
-    decayItrStart = decayEventMap->lower_bound((Long64_t)gatedImplantEvent.time - ConfigReader::Instance().GetTimeThreshold());
+    decayItrEnd = decayEventMap->lower_bound((Long64_t)gatedImplantEvent.time + ConfigReader::Instance().GetTimeThreshold());
+    decayItrStart = decayEventMap->lower_bound((Long64_t)gatedImplantEvent.time - 2 * ConfigReader::Instance().GetTimeThreshold());
 
     auto rbegin = std::make_reverse_iterator(decayItrStart);
     auto rend = std::make_reverse_iterator(decayItrEnd);
