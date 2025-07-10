@@ -1,43 +1,13 @@
-cmake_minimum_required(VERSION 3.18) 
-project(ionbeta LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.18)
+project(ionbeta)
 
-find_package(ROOT REQUIRED COMPONENTS
-             Core RIO Net Hist Graf Gpad Tree Rint)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)  
-
-file(GLOB_RECURSE SRC_FILES       CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.c*")
-file(GLOB_RECURSE PUBLIC_HEADERS  CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/include/*.h*")
-
-add_executable(${PROJECT_NAME} ${SRC_FILES} ${PUBLIC_HEADERS})
-
-target_include_directories(${PROJECT_NAME}
-    PUBLIC
-        ${CMAKE_SOURCE_DIR}/include          
-        ${ROOT_INCLUDE_DIRS})                
-
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-        ${ROOT_LIBRARIES})                   
-
-link_directories($ENV{HOME}/openssl-1.1/lib)
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-        ${ROOT_LIBRARIES}
-        ssl crypto  # Add this explicitly
-)
-
-
-if(EXISTS "${ROOT_USE_FILE}")
-    include(${ROOT_USE_FILE})
+# Detect and include the appropriate platform-specific file
+if(APPLE)
+    message(STATUS "Detected macOS — including macOS CMake config.")
+    include(${CMAKE_SOURCE_DIR}/CMakeLists.macos.txt)
+elseif(UNIX)
+    message(STATUS "Detected Unix/Linux — including default CMake config.")
+    include(${CMAKE_SOURCE_DIR}/CMakeLists.linux.txt)
+else()
+    message(FATAL_ERROR "Unsupported platform")
 endif()
-
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-
-message(STATUS "Source files (${PROJECT_NAME}):")
-foreach(f IN LISTS SRC_FILES)  
-    message(STATUS "  ${f}")
-endforeach()

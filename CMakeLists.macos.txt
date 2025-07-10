@@ -1,0 +1,43 @@
+include_guard(GLOBAL)
+
+message(STATUS "Running macOS-specific CMake configuration")
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Find ROOT
+find_package(ROOT REQUIRED COMPONENTS Core RIO Tree Hist Physics Matrix Graf Gpad Gui MathCore Thread)
+
+# OpenSSL path (Homebrew default on Apple Silicon)
+set(OPENSSL_ROOT_DIR "/opt/homebrew/opt/openssl@3")
+set(OPENSSL_INCLUDE_DIR "${OPENSSL_ROOT_DIR}/include")
+set(OPENSSL_LIB_DIR "${OPENSSL_ROOT_DIR}/lib")
+
+# Set binary output directory to build/bin/
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# Include directories
+include_directories(
+  ${CMAKE_SOURCE_DIR}/include
+  ${ROOT_INCLUDE_DIRS}
+  ${OPENSSL_INCLUDE_DIR}
+)
+
+# Link directories
+link_directories(${OPENSSL_LIB_DIR})
+
+# Gather sources
+file(GLOB_RECURSE SRC_FILES       CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.c*")
+file(GLOB_RECURSE PUBLIC_HEADERS  CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/include/*.h*")
+
+# Build target
+add_executable(ionbeta ${SRC_FILES} ${PUBLIC_HEADERS} )
+
+# Link libraries
+target_link_libraries(ionbeta
+  ${ROOT_LIBRARIES}
+  ${OPENSSL_LIB_DIR}/libssl.dylib
+  ${OPENSSL_LIB_DIR}/libcrypto.dylib
+)
+
+message(STATUS "Configured ionbeta with ROOT and OpenSSL")

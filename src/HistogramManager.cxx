@@ -213,7 +213,8 @@ void HistogramManager::InitialiseHistograms(){
   h1_clustersize_candidate_cut = new TH1D("clustersize_candidate_cut", "Decay Cluster Size (Beta Candidate Cut)", 50, 0, 10);
 
   // Define plots for all candidate implant decay dt
-  h1_all_candidate_ionbeta_dt = new TH1D("all_candidate_ionbeta_dt", "Implant-Decay dt (All candidates)", HistogramConstants::implantDecayBins, -ConfigReader::Instance().GetTimeThreshold(), ConfigReader::Instance().GetTimeThreshold());
+  // h1_all_candidate_ionbeta_dt = new TH1D("all_candidate_ionbeta_dt", "Implant-Decay dt (All candidates)", HistogramConstants::implantDecayBins, -ConfigReader::Instance().GetTimeThreshold(), ConfigReader::Instance().GetTimeThreshold());
+  h1_all_candidate_ionbeta_dt = new TH1D("all_candidate_ionbeta_dt", "Implant-Decay dt (All candidates)", 1000, -ConfigReader::Instance().GetTimeThreshold(), ConfigReader::Instance().GetTimeThreshold());
 
   // Correlate low multiplicity implant-decay dt with other observables
   h2_hitpattern_low_multiplicity = new TH2D("hitpattern_low_multiplicity", "AIDA Beta Candidate Hitpattern (Beta Multiplicity < 4)", 384, 0, 384, 128, 0, 128);

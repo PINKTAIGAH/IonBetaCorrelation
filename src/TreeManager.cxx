@@ -60,7 +60,7 @@ void TreeManager::FillMaps(){
 
     // Load implant map
     while (reader.Next()){
-      if ( *implantDssd==TreeManagerConstants::dssd && TMath::Abs((Long64_t)*implantTimeX-(Long64_t)*implantTimeY) < TreeManagerConstants::implantTimeDiff ){
+      if ( *implantDssd==TreeManagerConstants::dssd /* && TMath::Abs((Long64_t)*implantTimeX-(Long64_t)*implantTimeY) < TreeManagerConstants::implantTimeDiff */ ){
 
         ImplantEvent tempEvent = {
           *implantTime, *implantTimeX, *implantTimeY, *implantX, *implantY, *implantEnergy, *implantEnergyX, *implantEnergyY, *implantClusterSizeX, *implantClusterSizeY,
@@ -105,7 +105,7 @@ void TreeManager::FillMaps(){
 
     // Load gated implant map
     while (reader.Next()){
-      if ( *gatedImplantDssd==TreeManagerConstants::dssd && TMath::Abs((Long64_t)*gatedImplantTimeX-(Long64_t)*gatedImplantTimeY) < TreeManagerConstants::implantTimeDiff ){
+      if ( *gatedImplantDssd==TreeManagerConstants::dssd /* && TMath::Abs((Long64_t)*gatedImplantTimeX-(Long64_t)*gatedImplantTimeY) < TreeManagerConstants::implantTimeDiff */ ){
 
         ImplantEvent tempEvent = {
           *gatedImplantTime, *gatedImplantTimeX, *gatedImplantTimeY, *gatedImplantX, *gatedImplantY, *gatedImplantEnergy, *gatedImplantEnergyX, *gatedImplantEnergyY, *gatedImplantClusterSizeX, *gatedImplantClusterSizeY,
@@ -150,7 +150,7 @@ void TreeManager::FillMaps(){
 
     // Load decay map
     while (reader.Next()){
-      if ( *decayDssd == TreeManagerConstants::dssd && TMath::Abs((Long64_t)*decayTimeX-(Long64_t)*decayTimeY) < TreeManagerConstants::decayTimeDiff && TMath::Abs((Long64_t)*decayEnergyX-(Long64_t)*decayEnergyY) < TreeManagerConstants::decayEnergyDiff && *decayEnergy > TreeManagerConstants::decayEnergyMin && *decayEnergy < TreeManagerConstants::decayEnergyMax ){
+      if ( *decayDssd == TreeManagerConstants::dssd && TMath::Abs((Long64_t)*decayTimeX-(Long64_t)*decayTimeY) < TreeManagerConstants::decayTimeDiff && TMath::Abs(*decayEnergyX-*decayEnergyY) < TreeManagerConstants::decayEnergyDiff && *decayEnergy > TreeManagerConstants::decayEnergyMin && *decayEnergy < TreeManagerConstants::decayEnergyMax ){
 
         DecayEvent tempEvent = {
           *decayTime, *decayTimeX, *decayTimeY, *decayX, *decayY, *decayEnergy, *decayEnergyX, *decayEnergyY, *decayClusterSizeX, *decayClusterSizeY,

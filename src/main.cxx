@@ -10,6 +10,8 @@ int main (int argc, char* argv[]){
   // Initialte scoped timer for program runtime
   Logger::ScopedTimer programTimer("Program ionbeta");
 
+  Logger::Log("TEST");
+
   // Define program flags
   ArgumentParser::Instance().AddFlag("C", "Config file", true);
   ArgumentParser::Instance().AddFlag("O", "Output file path", false, "output.root");

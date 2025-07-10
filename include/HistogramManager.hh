@@ -15,7 +15,7 @@ namespace HistogramConstants {
   const Double_t slicesEvery = 1;                                                     // Size of white rabbit histogram bins
   const Long64_t durationInSeconds = (wrExperimentEnd - wrExperimentStart) / 1e9;     // Duration of experiment
   const Long64_t numberOfSlices = durationInSeconds / slicesEvery;                    // Number of white rabbit histogram bins
-  const Double_t implantDecayBinDt = 2e6;
+  const Double_t implantDecayBinDt = 1e6;
   const Long64_t implantDecayBins = 2 * Global::timeThreshold / implantDecayBinDt;
 
 }

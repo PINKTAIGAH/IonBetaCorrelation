@@ -378,8 +378,8 @@ void CorrelationManager::CorrelateDecayGermaniums(){
       if ( ConfigReader::Instance().GetOnlyOffspillDecays() && betaCandidateEvent.decaySpill == 1) continue;
 
       // Define lower bound and upper bounds for loops
-      auto germaniumItrStart = germaniumEventMap->lower_bound(betaCandidateEvent.decayTime - ConfigReader::Instance().GetDecayGammaWindow().start - 10e3); // 10e3 before start of gamma window
-      auto germaniumItrEnd = germaniumEventMap->upper_bound(betaCandidateEvent.decayTime - ConfigReader::Instance().GetDecayGammaWindow().end + 10e3); // 10e3 after end of gamma window
+      auto germaniumItrStart = germaniumEventMap->lower_bound(betaCandidateEvent.decayTime + ConfigReader::Instance().GetDecayGammaWindow().start - 50e3); // 10e3 before start of gamma window
+      auto germaniumItrEnd = germaniumEventMap->upper_bound(betaCandidateEvent.decayTime + ConfigReader::Instance().GetDecayGammaWindow().end + 50e3); // 10e3 after end of gamma window
       
       // Loop over all germaniums in bounds
       for (auto germaniumItr = germaniumItrStart; germaniumItr != germaniumItrEnd; ++germaniumItr){
@@ -387,6 +387,9 @@ void CorrelationManager::CorrelateDecayGermaniums(){
         // Unpack germanium event & find timediff
         auto& germaniumEvent = germaniumItr->second;
         Long64_t betaGammaTimediff =  (Long64_t)germaniumEvent.time - (Long64_t)betaCandidateEvent.decayTime;
+        // EXPERIMENTAL
+        betaGammaTimediff = -betaGammaTimediff;
+        // EXPERIMENTAL
         if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Beta Gamma time difference: " + std::to_string(betaGammaTimediff), Logger::Level::DEBUG);
 
         // Fill histos
@@ -417,8 +420,8 @@ void CorrelationManager::CorrelateDecayGermaniums(){
           histogramManager->h2_gatedimplantbetagamma_energy_vs_decaystrip_forwardmatch->Fill(betaCandidateEvent.decayPositionY + 400, germaniumEvent.e); // Add 400 to skip to part of histo containing y strips
 
           // Define lower bound and upper bounds for second germanium loop
-          auto otherGermaniumItrStart = germaniumEventMap->lower_bound(betaCandidateEvent.decayTime - ConfigReader::Instance().GetDecayGammaWindow().start - 10e3); // 10e3 before start of gamma window
-          auto otherGermaniumItrEnd = germaniumEventMap->upper_bound(betaCandidateEvent.decayTime - ConfigReader::Instance().GetDecayGammaWindow().end + 10e3); // 10e3 after end of gamma window
+          auto otherGermaniumItrStart = germaniumEventMap->lower_bound(betaCandidateEvent.decayTime + ConfigReader::Instance().GetDecayGammaWindow().start - 50e3); // 10e3 before start of gamma window
+          auto otherGermaniumItrEnd = germaniumEventMap->upper_bound(betaCandidateEvent.decayTime + ConfigReader::Instance().GetDecayGammaWindow().end + 50e3); // 10e3 after end of gamma window
 
           // Perform Gamma-Gamma Correlation
           for (auto otherGermaniumItr = otherGermaniumItrStart; otherGermaniumItr != otherGermaniumItrEnd; ++otherGermaniumItr){
@@ -448,8 +451,8 @@ void CorrelationManager::CorrelateDecayGermaniums(){
           histogramManager->h2_gatedimplantbetagamma_energy_vs_decaystrip_backwardmatch->Fill(betaCandidateEvent.decayPositionY + 400, germaniumEvent.e); // Add 400 to skip to part of histo containing y strips
 
           // Define lower bound and upper bounds for second germanium loop
-          auto otherGermaniumItrStart = germaniumEventMap->lower_bound(betaCandidateEvent.decayTime - ConfigReader::Instance().GetDecayGammaWindow().start - 10e3); // 10e3 before start of gamma window
-          auto otherGermaniumItrEnd = germaniumEventMap->upper_bound(betaCandidateEvent.decayTime - ConfigReader::Instance().GetDecayGammaWindow().end + 10e3); // 10e3 after end of gamma window
+          auto otherGermaniumItrStart = germaniumEventMap->lower_bound(betaCandidateEvent.decayTime + ConfigReader::Instance().GetDecayGammaWindow().start - 10e3); // 10e3 before start of gamma window
+          auto otherGermaniumItrEnd = germaniumEventMap->upper_bound(betaCandidateEvent.decayTime + ConfigReader::Instance().GetDecayGammaWindow().end + 10e3); // 10e3 after end of gamma window
 
           // Perform Gamma-Gamma Correlation
           for (auto otherGermaniumItr = otherGermaniumItrStart; otherGermaniumItr != otherGermaniumItrEnd; ++otherGermaniumItr){
@@ -490,8 +493,8 @@ void CorrelationManager::FillGermaniumHistograms(){
     histogramManager->h1_gamma_spectrum->Fill(germaniumEvent.e);
 
     // Get decay loop bounds
-    auto decayItrLowerBound = decayEventMap->lower_bound(germaniumEvent.time + ConfigReader::Instance().GetDecayGammaWindow().start - 50e3);
-    auto decayItrUpperBound = decayEventMap->upper_bound(germaniumEvent.time + ConfigReader::Instance().GetDecayGammaWindow().end + 50e3);
+    auto decayItrLowerBound = decayEventMap->lower_bound(germaniumEvent.time - ConfigReader::Instance().GetDecayGammaWindow().start - 50e3);
+    auto decayItrUpperBound = decayEventMap->upper_bound(germaniumEvent.time - ConfigReader::Instance().GetDecayGammaWindow().end + 50e3);
 
     for (auto decayItr = decayItrLowerBound; decayItr != decayItrUpperBound; ++decayItr){
 
