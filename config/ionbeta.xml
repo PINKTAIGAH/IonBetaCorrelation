@@ -1,0 +1,37 @@
+<config>
+
+    <isotope name="82nb">
+        <timeScale> 1e6 </timeScale>
+        <timeThreshold> 500 </timeThreshold>
+    </isotope>
+
+    <isotope name="84nb">
+        <timeScale> 1e9 </timeScale>
+        <timeThreshold> 50 </timeThreshold>
+    </isotope>
+
+    <window name = "decayGamma">
+        <start> -18200 </start>
+        <end> -12900 </end>
+    </window>
+
+    <window name = "gammaGamma">
+        <start> -500 </start>
+        <end> 500 </end>
+    </window>
+
+    <implantDeadtime> 350e3 </implantDeadtime>
+    <totalDeadtimePositionWindow> 5. </totalDeadtimePositionWindow>
+
+    <vetoInterruptedImplant> true </vetoInterruptedImplant>
+    <onlyOffspillDecay> false </onlyOffspillDecay>
+    <allowAjacentClusters> true </allowAjacentClusters>
+
+    <betaGammaCandidateCut> 5 </betaGammaCandidateCut>
+
+    <brokenAidaStripsDecayX> 128 </brokenAidaStripsDecayX>
+    <brokenAidaStripsDecayY></brokenAidaStripsDecayY>
+    <brokenAidaStripsImplantX></brokenAidaStripsImplantX>
+    <brokenAidaStripsImplantY></brokenAidaStripsImplantY>
+
+</config>

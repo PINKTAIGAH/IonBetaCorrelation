@@ -8,6 +8,7 @@
 
 #include "Logger.hh"
 #include "TreeManager.hh"
+#include "ConfigReader.hh"
 #include "AnatreeEventStructs.hh"
 
 // Constructor
@@ -86,22 +87,22 @@ void TreeManager::FillMaps(){
     std::multimap<ULong64_t, ImplantEvent> localMap;
 
     // Initialise TTreeReaderValues
-    TTreeReaderValue<ULong64_t> gatedImplantTime(reader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".time" ).c_str() );
-    TTreeReaderValue<ULong64_t> gatedImplantTimeX(reader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".time_x" ).c_str() );
-    TTreeReaderValue<ULong64_t> gatedImplantTimeY(reader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".time_y" ).c_str() );
-    TTreeReaderValue<Double_t> gatedImplantX(reader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".x" ).c_str() );
-    TTreeReaderValue<Double_t> gatedImplantY(reader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".y" ).c_str() );
-    TTreeReaderValue<Double_t> gatedImplantEnergy(reader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".e" ).c_str() );
-    TTreeReaderValue<Double_t> gatedImplantEnergyX(reader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".ex" ).c_str() );
-    TTreeReaderValue<Double_t> gatedImplantEnergyY(reader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".ey" ).c_str() );
-    TTreeReaderValue<Int_t> gatedImplantClusterSizeX(reader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".csx" ).c_str() );
-    TTreeReaderValue<Int_t> gatedImplantClusterSizeY(reader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".csy" ).c_str() );
-    TTreeReaderValue<Int_t> gatedImplantClusterMinX(reader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".cminx" ).c_str() );
-    TTreeReaderValue<Int_t> gatedImplantClusterMinY(reader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".cminy" ).c_str() );
-    TTreeReaderValue<Int_t> gatedImplantClusterMaxX(reader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".cmaxx" ).c_str() );
-    TTreeReaderValue<Int_t> gatedImplantClusterMaxY(reader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".cmaxy" ).c_str() );
-    TTreeReaderValue<Int_t> gatedImplantDssd(reader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".dssd" ).c_str() );
-    TTreeReaderValue<Int_t> gatedImplantSpill(reader, ( TreeManagerConstants::gatedImplantBranchName + (std::string)".sp" ).c_str() );
+    TTreeReaderValue<ULong64_t> gatedImplantTime(reader, ( "gatedimplant_" + ConfigReader::Instance().GetIsotopeName() + ".time" ).c_str() );
+    TTreeReaderValue<ULong64_t> gatedImplantTimeX(reader, ( "gatedimplant_" + ConfigReader::Instance().GetIsotopeName() + ".time_x" ).c_str() );
+    TTreeReaderValue<ULong64_t> gatedImplantTimeY(reader, ( "gatedimplant_" + ConfigReader::Instance().GetIsotopeName() + ".time_y" ).c_str() );
+    TTreeReaderValue<Double_t> gatedImplantX(reader, ( "gatedimplant_" + ConfigReader::Instance().GetIsotopeName() + ".x" ).c_str() );
+    TTreeReaderValue<Double_t> gatedImplantY(reader, ( "gatedimplant_" + ConfigReader::Instance().GetIsotopeName() + ".y" ).c_str() );
+    TTreeReaderValue<Double_t> gatedImplantEnergy(reader, ( "gatedimplant_" + ConfigReader::Instance().GetIsotopeName() + ".e" ).c_str() );
+    TTreeReaderValue<Double_t> gatedImplantEnergyX(reader, ( "gatedimplant_" + ConfigReader::Instance().GetIsotopeName() + ".ex" ).c_str() );
+    TTreeReaderValue<Double_t> gatedImplantEnergyY(reader, ( "gatedimplant_" + ConfigReader::Instance().GetIsotopeName() + ".ey" ).c_str() );
+    TTreeReaderValue<Int_t> gatedImplantClusterSizeX(reader, ( "gatedimplant_" + ConfigReader::Instance().GetIsotopeName() + ".csx" ).c_str() );
+    TTreeReaderValue<Int_t> gatedImplantClusterSizeY(reader, ( "gatedimplant_" + ConfigReader::Instance().GetIsotopeName() + ".csy" ).c_str() );
+    TTreeReaderValue<Int_t> gatedImplantClusterMinX(reader, ( "gatedimplant_" + ConfigReader::Instance().GetIsotopeName() + ".cminx" ).c_str() );
+    TTreeReaderValue<Int_t> gatedImplantClusterMinY(reader, ( "gatedimplant_" + ConfigReader::Instance().GetIsotopeName() + ".cminy" ).c_str() );
+    TTreeReaderValue<Int_t> gatedImplantClusterMaxX(reader, ( "gatedimplant_" + ConfigReader::Instance().GetIsotopeName() + ".cmaxx" ).c_str() );
+    TTreeReaderValue<Int_t> gatedImplantClusterMaxY(reader, ( "gatedimplant_" + ConfigReader::Instance().GetIsotopeName() + ".cmaxy" ).c_str() );
+    TTreeReaderValue<Int_t> gatedImplantDssd(reader, ( "gatedimplant_" + ConfigReader::Instance().GetIsotopeName() + ".dssd" ).c_str() );
+    TTreeReaderValue<Int_t> gatedImplantSpill(reader, ( "gatedimplant_" + ConfigReader::Instance().GetIsotopeName() + ".sp" ).c_str() );
 
     // Load gated implant map
     while (reader.Next()){

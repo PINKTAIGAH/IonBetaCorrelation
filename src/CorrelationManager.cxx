@@ -388,7 +388,7 @@ void CorrelationManager::CorrelateDecayGermaniums(){
         auto& germaniumEvent = germaniumItr->second;
         Long64_t betaGammaTimediff =  (Long64_t)germaniumEvent.time - (Long64_t)betaCandidateEvent.decayTime;
         // EXPERIMENTAL
-        betaGammaTimediff = -betaGammaTimediff;
+        // betaGammaTimediff = -betaGammaTimediff;
         // EXPERIMENTAL
         if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Beta Gamma time difference: " + std::to_string(betaGammaTimediff), Logger::Level::DEBUG);
 
@@ -516,8 +516,6 @@ void CorrelationManager::FillGermaniumHistograms(){
 }
 
 void CorrelationManager::FillDecayHistograms(){
-
-  Logger::ScopedTimer("Filling decay histograms");
 
   for (auto decayItr = decayEventMap->begin(); decayItr != decayEventMap->end(); ++decayItr){
     // Unpack germanium event 

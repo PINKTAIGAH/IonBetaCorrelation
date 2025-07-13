@@ -1,9 +1,11 @@
 #include <utility>
 
 #include "utils.hh"
+#include "Logger.hh"
+#include "ArgumentParser.hh"
 
 bool IsStripOverlaping(int strip, ClusterRange clusterRange){
-  return strip >= clusterRange.min && strip < clusterRange.max+1;
+  return strip >= clusterRange.min && strip < clusterRange.max;
 }
 
 bool IsNoisyStrip(std::vector<int> noisyStripVector, ClusterRange decayClusterRange){
@@ -19,6 +21,7 @@ bool IsNoisyStrip(std::vector<int> noisyStripVector, ClusterRange decayClusterRa
       // If event strip corresponds to a noisy strip, change flag and break
       if ( IsStripOverlaping(noisyStrip, decayClusterRange) ){
         isNoisy = true;
+        if ( ArgumentParser::Instance().HasFlag("v") ) Logger::Log("Found noisy strip: " + std::to_string(noisyStrip) + " Cluster: " + "(" + std::to_string(decayClusterRange.min) + "," + std::to_string(decayClusterRange.max) + ")", Logger::Level::DEBUG);
         break;
       }
     }

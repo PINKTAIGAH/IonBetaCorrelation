@@ -8,6 +8,7 @@
 #include "TObject.h"
 
 #include "GlobalConstants.hh"
+#include "ConfigReader.hh"
 
 namespace HistogramConstants {
   const Long64_t wrExperimentStart = 1.7401830e+18;                                   // White rabbit start time of files
@@ -16,7 +17,6 @@ namespace HistogramConstants {
   const Long64_t durationInSeconds = (wrExperimentEnd - wrExperimentStart) / 1e9;     // Duration of experiment
   const Long64_t numberOfSlices = durationInSeconds / slicesEvery;                    // Number of white rabbit histogram bins
   const Double_t implantDecayBinDt = 1e6;
-  const Long64_t implantDecayBins = 2 * Global::timeThreshold / implantDecayBinDt;
 
 }
 

@@ -21,10 +21,10 @@ void IonBeta(){
   // *************************************************************************************
 
   // Make TChain Objects for each tree
-  TChain* implantChain = new TChain(TreeManagerConstants::implantTreeName.c_str());
-  TChain* gatedImplantChain = new TChain(TreeManagerConstants::gatedImplantTreeName.c_str());
-  TChain* decayChain = new TChain(TreeManagerConstants::decayTreeName.c_str());
-  TChain* germaniumChain = new TChain(TreeManagerConstants::germaniumTreeName.c_str());
+  TChain* implantChain = new TChain("aida_implant_tree");
+  TChain* gatedImplantChain = new TChain( ("aida_gatedimplant_" + ConfigReader::Instance().GetIsotopeName() + "_tree").c_str());
+  TChain* decayChain = new TChain("aida_decay_tree");
+  TChain* germaniumChain = new TChain("germanium_tree");
 
   std::unordered_map<std::string, TChain*> chainMap = { {"implant", implantChain}, {"gatedImplant", gatedImplantChain}, {"decay", decayChain}, {"germanium", germaniumChain} };
 

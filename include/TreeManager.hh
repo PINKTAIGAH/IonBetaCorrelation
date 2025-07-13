@@ -13,18 +13,10 @@
 
 #include "GlobalConstants.hh"
 #include "AnatreeEventStructs.hh"
+#include "ConfigReader.hh"
 
 // Define class constants
 namespace TreeManagerConstants{
-
-  // Names of Trees
-  const std::string implantTreeName = "aida_implant_tree";
-  const std::string decayTreeName = "aida_decay_tree";
-  const std::string germaniumTreeName = "germanium_tree";
-  const std::string gatedImplantTreeName = "aida_gatedimplant_" + Global::isotopeName + "_tree";
-
-  // Names of gated implant branch
-  const std::string gatedImplantBranchName = "gatedimplant_" + Global::isotopeName;
 
   // Event gate values
   const Int_t dssd = 1;
