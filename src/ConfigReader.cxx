@@ -1,54 +1,57 @@
 #include <sstream>
-
-#include "TObjArray.h"
-#include "TObjString.h"
+#include <iostream>
+#include <algorithm>
+#include <cstdlib>
 
 #include "Logger.hh"
 #include "ConfigReader.hh"
 
-// Constructor
+// Constructor 
 
-ConfigReader::ConfigReader() {};
+ConfigReader::ConfigReader()
+    : xmlDoc(std::make_unique<tinyxml2::XMLDocument>()) {};
+
+
 
 ConfigReader& ConfigReader::Instance(){
   static ConfigReader instance;
   return instance;
 }
 
-void ConfigReader::Initialise(const std::string configFile){
+void ConfigReader::Initialise(const std::string configFile, const std::string& isotopeName){
   if (initialised){
     Logger::Log("ConfigReader already initialised. Skipping", Logger::Level::WARNING);
     return;
   }
+
   this->configFile = configFile;
+  this->requestedIsotopeName = isotopeName;
   LoadConfig();
   initialised = true;
 
-  if (unsuccesfulConfigReading) {
-    Logger::Log("Could not read config file succesfully", Logger::Level::FATAL);
+  if (unsuccessfulConfigReading){
+    Logger::Log("Could not read config file successfully", Logger::Level::FATAL);
     std::exit(1);
   }
-
-
 }
 
-
-// Private
+// Private Methods
 
 void ConfigReader::LoadConfig(){
+  unsuccessfulConfigReading = false;
 
-  unsuccesfulConfigReading = false;
-
-  // Define TEnv
-  env = std::make_unique<TEnv>();
-  int status = env->ReadFile(configFile.c_str(), kEnvUser);
-
-  // Check if logger was opened succesfully
-  if (status!=0){
-    Logger::Log("Problem reading config file: " + configFile, Logger::Level::FATAL);
-    std::exit(1);
+  // Load XML file
+  tinyxml2::XMLError result = xmlDoc->LoadFile(configFile.c_str());
+  if (result != tinyxml2::XML_SUCCESS){
+    Logger::Log("Could not load XML config file: " + configFile + " (Error: " + std::to_string(result) + ")", Logger::Level::FATAL);
+    unsuccessfulConfigReading = true;
+    return;
   }
 
+  // Check valid isotope name 
+  if (FindIsotopeElement(true) == nullptr) return;
+
+  // Set all parameters
   SetIsotopeName();
   SetTimeScale();
   SetTimeThreshold();
@@ -65,157 +68,407 @@ void ConfigReader::LoadConfig(){
   SetBrokenAidaStripsDecayX();
   SetBrokenAidaStripsDecayY();
 
+  ValidateAllParametersLoaded();
 }
 
-void ConfigReader::KeyExists(const TString& key){
-  if (env->Lookup(key) != nullptr) return;
-  Logger::Log("Config parameter not recognised: " + std::string(key.Data()), Logger::Level::ERROR);
-  unsuccesfulConfigReading = true;
+void ConfigReader::ValidateAllParametersLoaded(){
+  if (isotopeName == stringSentinel) unsuccessfulConfigReading = true;
+  if (timeScale == numSentinel) unsuccessfulConfigReading = true;
+  if (timeThreshold == numSentinel) unsuccessfulConfigReading = true;
+  if (decayGammaWindow.start == numSentinel || decayGammaWindow.end == numSentinel) unsuccessfulConfigReading = true;
+  if (gammaGammaWindow.start == numSentinel || gammaGammaWindow.end == numSentinel) unsuccessfulConfigReading = true;
+  if (implantDeadTime == numSentinel) unsuccessfulConfigReading = true;
+  if (localDeadTimePositionWindow == numSentinel) unsuccessfulConfigReading = true;
+  if (betaGammaCandidateCut == numSentinel) unsuccessfulConfigReading = true;
 }
 
-std::vector<Int_t> ConfigReader::ParseStringToVector(TString& csvString){
+std::vector<Int_t> ConfigReader::ParseStringToVector(const std::string& spaceString){
   std::vector<Int_t> result;
-  TObjArray* tokens = csvString.Tokenize(",");
-  for (int idx=0; idx < tokens->GetEntries(); ++idx){
-    TString token = ((TObjString*)tokens->At(idx))->GetString();
-    result.emplace_back(token.Atoi());
-  }
-  delete tokens;
+  if (spaceString.empty() || spaceString == stringSentinel) return result;
+
+  std::stringstream ss(spaceString);
+  std::string token;
+  
+  while (ss >> token) result.push_back( std::stoi(token) ); // Loop through all non-whitespace tokens
+  
   return result;
 }
 
-// Defining setters
+tinyxml2::XMLElement* ConfigReader::FindIsotopeElement(bool logError){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    Logger::Log("No root <config> element found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return nullptr;
+  }
 
-void ConfigReader::SetIsotopeName(){
-  TString key = "isotopeName";
-  KeyExists(key);  
-  isotopeName = env->GetValue(key, stringSentinel);
+  std::ostringstream oss; // To store names of all isotopes in file in case none are recognised
+
+  for (tinyxml2::XMLElement* isotope = root->FirstChildElement("isotope"); isotope; isotope = isotope->NextSiblingElement("isotope")){
+    const char* name = isotope->Attribute("name");
+    oss << name << ", ";
+    if (name && requestedIsotopeName == name) return isotope;
+  }
+
+  // Remove training comma
+  std::string allIsotopeNames = oss.str();
+  if (!oss.str().empty()) allIsotopeNames.pop_back();
+
+  if (logError){
+    Logger::Log("Isotope not found: " + requestedIsotopeName, Logger::Level::ERROR);
+    Logger::Log("Isotopes defined in " + configFile + ": " + allIsotopeNames, Logger::Level::ERROR);
+  }
+
+  unsuccessfulConfigReading = true;
+  return nullptr;
 }
 
-void ConfigReader::SetTimeScale(){
-  TString key = "timeScale";
-  KeyExists(key);  
-  timeScale = env->GetValue(key, numSentinel);
+tinyxml2::XMLElement* ConfigReader::FindWindowElement(const std::string& windowName){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    Logger::Log("No root <config> element found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return nullptr;
+  }
+
+  for (tinyxml2::XMLElement* window = root->FirstChildElement("window"); window; window = window->NextSiblingElement("window")){
+    const char* name = window->Attribute("name");
+    if (name && windowName == name) return window;
+  }
+
+  Logger::Log("Window not found: " + windowName, Logger::Level::ERROR);
+  unsuccessfulConfigReading = true;
+  return nullptr;
 }
 
-void ConfigReader::SetTimeThreshold(){
-  TString key = "timeThreshold";
-  KeyExists(key);  
-  timeThreshold = env->GetValue(key, numSentinel) * timeScale;
+std::string ConfigReader::GetElementText(tinyxml2::XMLElement* element, const std::string& defaultValue){
+  if (!element) return defaultValue;
+
+  const char* text = element->GetText();
+  if (!text) return defaultValue;
+
+  // Trim whitespace
+  std::string result = text;
+  result.erase(0, result.find_first_not_of(" \t\n\r"));
+  result.erase(result.find_last_not_of(" \t\n\r") + 1);
+
+  return result;
 }
 
-void ConfigReader::SetDecayGammaWindow(){
-  TString startKey = "decayGammaWindow.start";
-  KeyExists(startKey);  
-  TString endKey = "decayGammaWindow.end";
-  KeyExists(endKey);  
+bool ConfigReader::GetElementBool(tinyxml2::XMLElement* element, bool defaultValue){
+  std::string text = GetElementText(element);
+  if (text.empty()) return defaultValue;
+  
+  std::transform(text.begin(), text.end(), text.begin(), ::tolower);
+  return (text == "true");
+}
 
-  Long64_t start = env->GetValue(startKey, numSentinel);
-  Long64_t end = env->GetValue(endKey, numSentinel);
+double ConfigReader::GetElementDouble(tinyxml2::XMLElement* element, Double_t defaultValue) {
+  std::string text = GetElementText(element);
+  if (text.empty()) return defaultValue;
+  
+  try {
+    return std::stod(text);
+  } catch (const std::exception& e) {
+    Logger::Log("Error parsing double value: " + text, Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return defaultValue;
+  }
+}
 
+int ConfigReader::GetElementInt(tinyxml2::XMLElement* element, Int_t defaultValue) {
+  std::string text = GetElementText(element);
+  if (text.empty()) return defaultValue;
+  
+  try {
+    return std::stoi(text);
+  } catch (const std::exception& e) {
+    Logger::Log("Error parsing int value: " + text, Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return defaultValue;
+  }
+}
+
+// Setters for each parameter
+
+void ConfigReader::SetIsotopeName() {
+  isotopeName = requestedIsotopeName;
+}
+
+void ConfigReader::SetTimeScale() {
+  tinyxml2::XMLElement* isotopeElement = FindIsotopeElement();
+  if (!isotopeElement) {
+    timeScale = numSentinel;
+    return;
+  }
+  
+  tinyxml2::XMLElement* timeScaleElement = isotopeElement->FirstChildElement("timeScale");
+  if (!timeScaleElement) {
+    Logger::Log("timeScale element not found for isotope: " + requestedIsotopeName, Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    timeScale = numSentinel;
+    return;
+  }
+  
+  timeScale = static_cast<Long64_t>(GetElementDouble(timeScaleElement, numSentinel));
+}
+
+void ConfigReader::SetTimeThreshold() {
+  tinyxml2::XMLElement* isotopeElement = FindIsotopeElement();
+  if (!isotopeElement) {
+    timeThreshold = numSentinel;
+    return;
+  }
+  
+  tinyxml2::XMLElement* timeThresholdElement = isotopeElement->FirstChildElement("timeThreshold");
+  if (!timeThresholdElement) {
+    Logger::Log("timeThreshold element not found for isotope: " + requestedIsotopeName, Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    timeThreshold = numSentinel;
+    return;
+  }
+  
+  Long64_t threshold = static_cast<Long64_t>(GetElementDouble(timeThresholdElement, numSentinel));
+  timeThreshold = threshold * timeScale;
+}
+
+void ConfigReader::SetDecayGammaWindow() {
+  tinyxml2::XMLElement* windowElement = FindWindowElement("decayGamma");
+  if (!windowElement) {
+    decayGammaWindow = {static_cast<Long64_t>(numSentinel), static_cast<Long64_t>(numSentinel)};
+    return;
+  }
+  
+  tinyxml2::XMLElement* startElement = windowElement->FirstChildElement("start");
+  tinyxml2::XMLElement* endElement = windowElement->FirstChildElement("end");
+  
+  if (!startElement || !endElement) {
+    Logger::Log("start or end element not found for decayGamma window", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    decayGammaWindow = {static_cast<Long64_t>(numSentinel), static_cast<Long64_t>(numSentinel)};
+    return;
+  }
+  
+  Long64_t start = static_cast<Long64_t>(GetElementDouble(startElement, numSentinel));
+  Long64_t end = static_cast<Long64_t>(GetElementDouble(endElement, numSentinel));
+  
   decayGammaWindow = {start, end};
 }
 
-void ConfigReader::SetGammaGammaWindow(){
-  TString startKey = "gammaGammaWindow.start";
-  KeyExists(startKey);  
-  TString endKey = "gammaGammaWindow.end";
-  KeyExists(endKey);  
-
-  Long64_t start = env->GetValue(startKey, numSentinel);
-  Long64_t end = env->GetValue(endKey, numSentinel);
-
+void ConfigReader::SetGammaGammaWindow() {
+  tinyxml2::XMLElement* windowElement = FindWindowElement("gammaGamma");
+  if (!windowElement) {
+    gammaGammaWindow = {static_cast<Long64_t>(numSentinel), static_cast<Long64_t>(numSentinel)};
+    return;
+  }
+  
+  tinyxml2::XMLElement* startElement = windowElement->FirstChildElement("start");
+  tinyxml2::XMLElement* endElement = windowElement->FirstChildElement("end");
+  
+  if (!startElement || !endElement) {
+    Logger::Log("start or end element not found for gammaGamma window", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    gammaGammaWindow = {static_cast<Long64_t>(numSentinel), static_cast<Long64_t>(numSentinel)};
+    return;
+  }
+  
+  Long64_t start = static_cast<Long64_t>(GetElementDouble(startElement, numSentinel));
+  Long64_t end = static_cast<Long64_t>(GetElementDouble(endElement, numSentinel));
+  
   gammaGammaWindow = {start, end};
 }
 
-void ConfigReader::SetImplantDeadTime(){
-  TString key = "implantDeadTime";
-  KeyExists(key);  
-  implantDeadTime = env->GetValue(key, numSentinel);
+void ConfigReader::SetImplantDeadTime() {
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root) {
+    implantDeadTime = numSentinel;
+    return;
+  }
+  
+  tinyxml2::XMLElement* element = root->FirstChildElement("implantDeadtime");
+  if (!element) {
+    Logger::Log("implantDeadtime element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    implantDeadTime = numSentinel;
+    return;
+  }
+  
+  implantDeadTime = static_cast<ULong64_t>(GetElementDouble(element, numSentinel));
 }
 
-void ConfigReader::SetLocalDeadTimePositionWindow(){
-  TString key = "localDeadTimePositionWindow";
-  KeyExists(key);  
-  localDeadTimePositionWindow = env->GetValue(key, numSentinel);
+void ConfigReader::SetLocalDeadTimePositionWindow() {
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root) {
+    localDeadTimePositionWindow = numSentinel;
+    return;
+  }
+  
+  tinyxml2::XMLElement* element = root->FirstChildElement("totalDeadtimePositionWindow");
+  if (!element) {
+    Logger::Log("totalDeadtimePositionWindow element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    localDeadTimePositionWindow = numSentinel;
+    return;
+  }
+  
+  localDeadTimePositionWindow = GetElementDouble(element, numSentinel);
 }
 
-void ConfigReader::SetVetoInterruptedImplants(){
-  TString key = "vetoInterruptedImplants";
-  KeyExists(key);  
-  vetoInterruptedImplants = env->GetValue(key, boolSentinel);
+void ConfigReader::SetVetoInterruptedImplants() {
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root) {
+    vetoInterruptedImplants = boolSentinel;
+    return;
+  }
+  
+  tinyxml2::XMLElement* element = root->FirstChildElement("vetoInterruptedImplant");
+  if (!element) {
+    Logger::Log("vetoInterruptedImplant element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    vetoInterruptedImplants = boolSentinel;
+    return;
+  }
+  
+  vetoInterruptedImplants = GetElementBool(element, boolSentinel);
 }
 
-void ConfigReader::SetOnlyOffspillDecays(){
-  TString key = "onlyOffspillDecays";
-  KeyExists(key);  
-  onlyOffspillDecays = env->GetValue(key, boolSentinel);
+void ConfigReader::SetOnlyOffspillDecays() {
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root) {
+    onlyOffspillDecays = boolSentinel;
+    return;
+  }
+  
+  tinyxml2::XMLElement* element = root->FirstChildElement("onlyOffspillDecay");
+  if (!element) {
+    Logger::Log("onlyOffspillDecay element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    onlyOffspillDecays = boolSentinel;
+    return;
+  }
+  
+  onlyOffspillDecays = GetElementBool(element, boolSentinel);
 }
 
-void ConfigReader::SetAllowAjacentClusters(){
-  TString key = "allowAjacentClusters";
-  KeyExists(key);  
-  allowAjacentClusters = env->GetValue(key, boolSentinel);
+void ConfigReader::SetAllowAjacentClusters() {
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root) {
+    allowAjacentClusters = boolSentinel;
+    return;
+  }
+  
+  tinyxml2::XMLElement* element = root->FirstChildElement("allowAjacentClusters");
+  if (!element) {
+    Logger::Log("allowAjacentClusters element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    allowAjacentClusters = boolSentinel;
+    return;
+  }
+  
+  allowAjacentClusters = GetElementBool(element, boolSentinel);
 }
 
-void ConfigReader::SetBetaGammaCandidateCut(){
-  TString key = "betaGammaCandidateCut";
-  KeyExists(key);  
-  betaGammaCandidateCut = env->GetValue(key, numSentinel);
+void ConfigReader::SetBetaGammaCandidateCut() {
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root) {
+    betaGammaCandidateCut = numSentinel;
+    return;
+  }
+  
+  tinyxml2::XMLElement* element = root->FirstChildElement("betaGammaCandidateCut");
+  if (!element) {
+    Logger::Log("betaGammaCandidateCut element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    betaGammaCandidateCut = numSentinel;
+    return;
+  }
+  
+  betaGammaCandidateCut = GetElementInt(element, numSentinel);
 }
 
-void ConfigReader::SetBrokenAidaStripsImplantX(){
-  TString key = "brokenAidaStripsImplantX";
-  KeyExists(key);  
-  TString vectorString = env->GetValue(key, stringSentinel);
-  brokenAidaStripsImplantX = ParseStringToVector(vectorString);
+void ConfigReader::SetBrokenAidaStripsImplantX() {
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root) return;
+  
+  tinyxml2::XMLElement* element = root->FirstChildElement("brokenAidaStripsImplantX");
+  if (!element) {
+    Logger::Log("brokenAidaStripsImplantX element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  std::string valueStr = GetElementText(element);
+  brokenAidaStripsImplantX = ParseStringToVector(valueStr);
 }
 
-void ConfigReader::SetBrokenAidaStripsImplantY(){
-  TString key = "brokenAidaStripsImplantY";
-  KeyExists(key);  
-  TString vectorString = env->GetValue(key, stringSentinel);
-  brokenAidaStripsImplantY = ParseStringToVector(vectorString);
+void ConfigReader::SetBrokenAidaStripsImplantY() {
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root) return;
+  
+  tinyxml2::XMLElement* element = root->FirstChildElement("brokenAidaStripsImplantY");
+  if (!element) {
+    Logger::Log("brokenAidaStripsImplantY element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  std::string valueStr = GetElementText(element);
+  brokenAidaStripsImplantY = ParseStringToVector(valueStr);
 }
 
-void ConfigReader::SetBrokenAidaStripsDecayX(){
-  TString key = "brokenAidaStripsDecayX";
-  KeyExists(key);  
-  TString vectorString = env->GetValue(key, stringSentinel);
-  brokenAidaStripsDecayX = ParseStringToVector(vectorString);
+void ConfigReader::SetBrokenAidaStripsDecayX() {
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root) return;
+  
+  tinyxml2::XMLElement* element = root->FirstChildElement("brokenAidaStripsDecayX");
+  if (!element) {
+    Logger::Log("brokenAidaStripsDecayX element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  std::string valueStr = GetElementText(element);
+  brokenAidaStripsDecayX = ParseStringToVector(valueStr);
 }
 
-void ConfigReader::SetBrokenAidaStripsDecayY(){
-  TString key = "brokenAidaStripsDecayY";
-  KeyExists(key);  
-  TString vectorString = env->GetValue(key, stringSentinel);
-  brokenAidaStripsDecayY = ParseStringToVector(vectorString);
+void ConfigReader::SetBrokenAidaStripsDecayY() {
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root) return;
+  
+  tinyxml2::XMLElement* element = root->FirstChildElement("brokenAidaStripsDecayY");
+  if (!element) {
+    Logger::Log("brokenAidaStripsDecayY element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  std::string valueStr = GetElementText(element);
+  brokenAidaStripsDecayY = ParseStringToVector(valueStr);
 }
 
-// Public
+// Public Methods
 
-void ConfigReader::PrintConfigValues(){
-
+void ConfigReader::PrintConfigValues() {
   // Lambda for vector to string
-  auto VectorToString = [](const std::vector<Int_t>& vector) -> std::string{
+  auto VectorToString = [](const std::vector<Int_t>& vector) -> std::string {
     std::ostringstream oss;
-    for (size_t idx=0; idx<vector.size(); ++idx){
+    for (size_t idx = 0; idx < vector.size(); ++idx) {
       oss << vector[idx];
-      if ( idx < vector.size()-1 ) oss << ", ";
+      if (idx < vector.size() - 1) oss << ", ";
     }
     return oss.str();
   };
 
-  Logger::Log("Config -> Isotope Name: " + std::string(isotopeName.Data()), Logger::Level::DEBUG);
+  Logger::Log("Config -> Isotope Name: " + isotopeName, Logger::Level::DEBUG);
   Logger::Log("Config -> Time Scale: " + std::to_string(timeScale), Logger::Level::DEBUG);
   Logger::Log("Config -> Time Threshold: " + std::to_string(timeThreshold), Logger::Level::DEBUG);
   Logger::Log("Config -> Decay Gamma Window: (" + std::to_string(decayGammaWindow.start) + "," + std::to_string(decayGammaWindow.end) + ")", Logger::Level::DEBUG);
   Logger::Log("Config -> Gamma Gamma Window: (" + std::to_string(gammaGammaWindow.start) + "," + std::to_string(gammaGammaWindow.end) + ")", Logger::Level::DEBUG);
   Logger::Log("Config -> Implant Deadtime: " + std::to_string(implantDeadTime), Logger::Level::DEBUG);
-  Logger::Log("Config -> Local Deadtime Positiion Window: " + std::to_string(localDeadTimePositionWindow), Logger::Level::DEBUG);
+  Logger::Log("Config -> Local Deadtime Position Window: " + std::to_string(localDeadTimePositionWindow), Logger::Level::DEBUG);
   Logger::Log("Config -> Veto Interrupted Implants: " + std::to_string(vetoInterruptedImplants), Logger::Level::DEBUG);
   Logger::Log("Config -> Only Offspill Decays: " + std::to_string(onlyOffspillDecays), Logger::Level::DEBUG);
-  Logger::Log("Config -> Allow Ajacent Clusters: " + std::to_string(allowAjacentClusters), Logger::Level::DEBUG);
+  Logger::Log("Config -> Allow Adjacent Clusters: " + std::to_string(allowAjacentClusters), Logger::Level::DEBUG);
   Logger::Log("Config -> Beta Gamma Candidate Cut: " + std::to_string(betaGammaCandidateCut), Logger::Level::DEBUG);
   Logger::Log("Config -> Broken Aida Strips Implant X: " + VectorToString(brokenAidaStripsImplantX), Logger::Level::DEBUG);
   Logger::Log("Config -> Broken Aida Strips Implant Y: " + VectorToString(brokenAidaStripsImplantY), Logger::Level::DEBUG);
@@ -223,18 +476,20 @@ void ConfigReader::PrintConfigValues(){
   Logger::Log("Config -> Broken Aida Strips Decay Y: " + VectorToString(brokenAidaStripsDecayY), Logger::Level::DEBUG);
 }
 
-std::string ConfigReader::GetIsotopeName() const{ return std::string(isotopeName); }
-Long64_t ConfigReader::GetTimeScale() const{ return timeScale; }
-Long64_t ConfigReader::GetTimeThreshold() const{ return timeThreshold; }
-PromptWindow ConfigReader::GetDecayGammaWindow() const{ return decayGammaWindow; }
-PromptWindow ConfigReader::GetGammaGammaWindow() const{ return gammaGammaWindow; }
-ULong64_t ConfigReader::GetImplantDeadTime() const{ return implantDeadTime; }
-Double_t ConfigReader::GetLocalDeadTimePositionWindow() const{ return localDeadTimePositionWindow; }
-bool ConfigReader::GetVetoInterruptedImplants() const{ return vetoInterruptedImplants; }
-bool ConfigReader::GetOnlyOffspillDecays() const{ return onlyOffspillDecays; }
-bool ConfigReader::GetAllowAjacentClusters() const{ return allowAjacentClusters; }
-Int_t ConfigReader::GetBetaGammaCandidateCut() const{ return betaGammaCandidateCut; }
-std::vector<Int_t> ConfigReader::GetBrokenAidaStripsImplantX() const{ return brokenAidaStripsImplantX; }
-std::vector<Int_t> ConfigReader::GetBrokenAidaStripsImplantY() const{ return brokenAidaStripsImplantY; }
-std::vector<Int_t> ConfigReader::GetBrokenAidaStripsDecayX() const{ return brokenAidaStripsDecayX; }
-std::vector<Int_t> ConfigReader::GetBrokenAidaStripsDecayY() const{ return brokenAidaStripsDecayY; }
+// Parameter Getters
+
+std::string ConfigReader::GetIsotopeName() const { return isotopeName; }
+Long64_t ConfigReader::GetTimeScale() const { return timeScale; }
+Long64_t ConfigReader::GetTimeThreshold() const { return timeThreshold; }
+PromptWindow ConfigReader::GetDecayGammaWindow() const { return decayGammaWindow; }
+PromptWindow ConfigReader::GetGammaGammaWindow() const { return gammaGammaWindow; }
+Long64_t ConfigReader::GetImplantDeadTime() const { return implantDeadTime; }
+Double_t ConfigReader::GetLocalDeadTimePositionWindow() const { return localDeadTimePositionWindow; }
+bool ConfigReader::GetVetoInterruptedImplants() const { return vetoInterruptedImplants; }
+bool ConfigReader::GetOnlyOffspillDecays() const { return onlyOffspillDecays; }
+bool ConfigReader::GetAllowAjacentClusters() const { return allowAjacentClusters; }
+Int_t ConfigReader::GetBetaGammaCandidateCut() const { return betaGammaCandidateCut; }
+std::vector<Int_t> ConfigReader::GetBrokenAidaStripsImplantX() const { return brokenAidaStripsImplantX; }
+std::vector<Int_t> ConfigReader::GetBrokenAidaStripsImplantY() const { return brokenAidaStripsImplantY; }
+std::vector<Int_t> ConfigReader::GetBrokenAidaStripsDecayX() const { return brokenAidaStripsDecayX; }
+std::vector<Int_t> ConfigReader::GetBrokenAidaStripsDecayY() const { return brokenAidaStripsDecayY; }

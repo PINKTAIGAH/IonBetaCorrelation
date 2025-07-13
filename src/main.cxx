@@ -11,6 +11,7 @@ int main (int argc, char* argv[]){
   Logger::ScopedTimer programTimer("Program ionbeta");
 
   // Define program flags
+  ArgumentParser::Instance().AddFlag("I", "Isotope name", true);
   ArgumentParser::Instance().AddFlag("C", "Config file", true);
   ArgumentParser::Instance().AddFlag("O", "Output file path", false, "output.root");
   ArgumentParser::Instance().AddFlag("v", "Verbose mode", false);
@@ -30,7 +31,7 @@ int main (int argc, char* argv[]){
     return 0;
   }
 
-  ConfigReader::Instance().Initialise(ArgumentParser::Instance().GetValue("C"));
+  ConfigReader::Instance().Initialise( ArgumentParser::Instance().GetValue("C"), ArgumentParser::Instance().GetValue("I") );
   if (ArgumentParser::Instance().HasFlag("v")) ConfigReader::Instance().PrintConfigValues();
 
   if ( ArgumentParser::Instance().GetPositionalArg(0) == "" ){

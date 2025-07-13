@@ -4,29 +4,25 @@
 #include <vector>
 #include <utility>
 #include <string>
-
-#include "TEnv.h"
-#include "TString.h"
-#include "TObject.h"
-
+#include <memory>
 #include "utils.hh"
+#include "tinyxml2.h"
 
 class ConfigReader{
   
   public:
     // Singleton Methods
     static ConfigReader& Instance();
-
-    void Initialise(const std::string configFile);
+    void Initialise(const std::string configFile, const std::string& isotopeName);
     void PrintConfigValues();
-
+    
     // Getters for parameters in config
     std::string GetIsotopeName() const;
     Long64_t GetTimeScale() const;
     Long64_t GetTimeThreshold() const;
     PromptWindow GetDecayGammaWindow() const;
     PromptWindow GetGammaGammaWindow() const;
-    ULong64_t GetImplantDeadTime() const;
+    Long64_t GetImplantDeadTime() const;
     Double_t GetLocalDeadTimePositionWindow() const;
     bool GetVetoInterruptedImplants() const;
     bool GetOnlyOffspillDecays() const;
@@ -38,31 +34,26 @@ class ConfigReader{
     std::vector<Int_t> GetBrokenAidaStripsDecayY() const;
 
   private:
-
     // Singleton implementation
     explicit ConfigReader();
     ConfigReader(const ConfigReader&) = delete;
     ConfigReader& operator=(const ConfigReader&) = delete;
-
+    
     bool initialised = false;
-
-    // TEnv Object
-    std::unique_ptr<TEnv> env;
     std::string configFile;
-    bool unsuccesfulConfigReading;
-
+    std::string requestedIsotopeName;
+    bool unsuccessfulConfigReading;
+    
+    // TinyXML-2 document
+    std::unique_ptr<tinyxml2::XMLDocument> xmlDoc;
+    
     // Sentinel Values
     const Double_t numSentinel = 999999;
     const bool boolSentinel = false;
-    const TString stringSentinel = "__MISSING__";
-
-    // Methods
-    void LoadConfig();
-    void KeyExists(const TString& key);
-    std::vector<Int_t> ParseStringToVector(TString& csvString);
-
-    // internal parameters for config values
-    TString isotopeName;
+    const std::string stringSentinel = "__MISSING__";
+    
+    // Internal parameters for config values
+    std::string isotopeName;
     Long64_t timeScale;
     Long64_t timeThreshold;
     PromptWindow decayGammaWindow;
@@ -77,9 +68,19 @@ class ConfigReader{
     std::vector<Int_t> brokenAidaStripsImplantY;
     std::vector<Int_t> brokenAidaStripsDecayX;
     std::vector<Int_t> brokenAidaStripsDecayY;
-    // ...
-
-    // Setters for each parameter passing TEnv as parameter
+    
+    // Helper methods
+    void LoadConfig();
+    void ValidateAllParametersLoaded();
+    std::vector<Int_t> ParseStringToVector(const std::string& spaceString);
+    tinyxml2::XMLElement* FindIsotopeElement(bool printError=false);
+    tinyxml2::XMLElement* FindWindowElement(const std::string& windowName);
+    std::string GetElementText(tinyxml2::XMLElement* element, const std::string& defaultValue = "");
+    bool GetElementBool(tinyxml2::XMLElement* element, bool defaultValue = false);
+    Double_t GetElementDouble(tinyxml2::XMLElement* element, Double_t defaultValue = 0.0);
+    Int_t GetElementInt(tinyxml2::XMLElement* element, Int_t defaultValue = 0);
+    
+    // Setters for each parameter
     void SetIsotopeName();
     void SetTimeScale();
     void SetTimeThreshold();
@@ -95,9 +96,6 @@ class ConfigReader{
     void SetBrokenAidaStripsImplantY();
     void SetBrokenAidaStripsDecayX();
     void SetBrokenAidaStripsDecayY();
-    // ...
-
 };
-
 
 #endif
