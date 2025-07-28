@@ -10,15 +10,14 @@
 #include "GlobalConstants.hh"
 #include "ConfigReader.hh"
 
-namespace HistogramConstants {
-  const Long64_t wrExperimentStart = 1.7401830e+18;                                   // White rabbit start time of files
-  const Long64_t wrExperimentEnd = 1.74022529e+18;                                    // White rabbit end time of files,
-  const Double_t slicesEvery = 1;                                                     // Size of white rabbit histogram bins
-  const Long64_t durationInSeconds = (wrExperimentEnd - wrExperimentStart) / 1e9;     // Duration of experiment
-  const Long64_t numberOfSlices = durationInSeconds / slicesEvery;                    // Number of white rabbit histogram bins
-  const Double_t implantDecayBinDt = 1e6;
-
-}
+// namespace HistogramConstants {
+//   const Long64_t wrExperimentStart = 1.7401830e+18;                                   // White rabbit start time of files
+//   const Long64_t wrExperimentEnd = 1.74022529e+18;                                    // White rabbit end time of files,
+//   const Double_t slicesEvery = 1;                                                     // Size of white rabbit histogram bins
+//   const Long64_t durationInSeconds = (wrExperimentEnd - wrExperimentStart) / 1e9;     // Duration of experiment
+//   const Long64_t numberOfSlices = durationInSeconds / slicesEvery;                    // Number of white rabbit histogram bins
+//   const Double_t implantDecayBinDt = 1e6;
+// }
 
 
 class HistogramManager{
@@ -28,6 +27,16 @@ class HistogramManager{
 
     // IDEA! If using xml config for hist constant definitions, add durationInSeconds and numberOfSlices 
     //       here as a private class member 
+
+    Long64_t wrExperimentStart = ConfigReader::Instance().GetWrExperimentStart();
+    Long64_t wrExperimentEnd = ConfigReader::Instance().GetWrExperimentEnd();
+    Double_t slicesEvery = ConfigReader::Instance().GetSliceEvery();
+    Long64_t implantDecayBinDt = ConfigReader::Instance().GetImplantDecayBinDt();
+    Long64_t timeThreshold = ConfigReader::Instance().GetTimeThreshold();
+
+    Long64_t durationInSeconds = (wrExperimentEnd - wrExperimentStart) / 1e9;
+    Long64_t numberOfSlices = durationInSeconds / slicesEvery;
+    Long64_t implantDecayBins = 2 * timeThreshold / implantDecayBinDt;
 
     void InitialiseHistograms();
   

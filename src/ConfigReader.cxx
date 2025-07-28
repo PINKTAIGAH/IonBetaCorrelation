@@ -70,6 +70,21 @@ void ConfigReader::LoadConfig(){
   SetBrokenAidaStripsImplantY();
   SetBrokenAidaStripsDecayX();
   SetBrokenAidaStripsDecayY();
+  SetWrExperimentStart();
+  SetWrExperimentEnd();
+  SetSliceEvery();
+  SetImplantDecayBinDt();
+  SetImplantTimeDiff();
+  SetImplantEnergyMin();
+  SetImplantEnergyMax();
+  SetImplantEnergyDiff();
+  SetImplantClusterSizeMax();
+  SetDecayTimeDiff();
+  SetDecayEnergyMin();
+  SetDecayEnergyMax();
+  SetDecayEnergyDiff();
+  SetDecayClusterSizeMax();
+  SetGermaniumEnergyMin();
 
   ValidateAllParametersLoaded();
 }
@@ -85,6 +100,22 @@ void ConfigReader::ValidateAllParametersLoaded(){
   if (localDeadTimePositionWindow == numSentinel) unsuccessfulConfigReading = true;
   if (betaGammaCandidateCut == numSentinel) unsuccessfulConfigReading = true;
   if (correlationPositionWindow == numSentinel) unsuccessfulConfigReading = true;
+  if (wrExperimentStart == numSentinel) unsuccessfulConfigReading = true;
+  if (wrExperimentEnd == numSentinel) unsuccessfulConfigReading = true;
+  if (sliceEvery == numSentinel) unsuccessfulConfigReading = true;
+  if (implantDecayBinDt == numSentinel) unsuccessfulConfigReading = true;
+  if (implantTimeDiff == numSentinel) unsuccessfulConfigReading = true;
+  if (implantEnergyMin == numSentinel) unsuccessfulConfigReading = true;
+  if (implantEnergyMax == numSentinel) unsuccessfulConfigReading = true;
+  if (implantEnergyDiff == numSentinel) unsuccessfulConfigReading = true;
+  if (implantClusterSizeMax == numSentinel) unsuccessfulConfigReading = true;
+  if (decayTimeDiff == numSentinel) unsuccessfulConfigReading = true;
+  if (decayEnergyMin == numSentinel) unsuccessfulConfigReading = true;
+  if (decayEnergyMax == numSentinel) unsuccessfulConfigReading = true;
+  if (decayEnergyDiff == numSentinel) unsuccessfulConfigReading = true;
+  if (decayClusterSizeMax == numSentinel) unsuccessfulConfigReading = true;
+  if (germaniumEnergyMin == numSentinel) unsuccessfulConfigReading = true;
+
 }
 
 std::vector<Int_t> ConfigReader::ParseStringToVector(const std::string& spaceString){
@@ -507,6 +538,366 @@ void ConfigReader::SetBrokenAidaStripsDecayY() {
   brokenAidaStripsDecayY = ParseStringToVector(valueStr);
 }
 
+void ConfigReader::SetWrExperimentStart(){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    wrExperimentStart = static_cast<Long64_t>(numSentinel);
+    return;
+  }
+
+  tinyxml2::XMLElement* histogramElement = root->FirstChildElement("histogram");
+  if (!histogramElement){
+    Logger::Log("Histogram element not found", Logger::Level::ERROR); 
+    wrExperimentStart = static_cast<Long64_t>(numSentinel);
+    return;
+  }
+
+  tinyxml2::XMLElement* element = histogramElement->FirstChildElement("wrExperimentStart");
+  if (!element){
+    Logger::Log("wrExperimentStart element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  wrExperimentStart = static_cast<Long64_t>(GetElementDouble(element, numSentinel));
+}
+
+void ConfigReader::SetWrExperimentEnd(){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    wrExperimentEnd = static_cast<Long64_t>(numSentinel);
+    return;
+  }
+
+  tinyxml2::XMLElement* histogramElement = root->FirstChildElement("histogram");
+  if (!histogramElement){
+    Logger::Log("Histogram element not found", Logger::Level::ERROR); 
+    wrExperimentEnd = static_cast<Long64_t>(numSentinel);
+    return;
+  }
+
+  tinyxml2::XMLElement* element = histogramElement->FirstChildElement("wrExperimentEnd");
+  if (!element){
+    Logger::Log("wrExperimentEnd element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  wrExperimentEnd = static_cast<Long64_t>(GetElementDouble(element, numSentinel));
+}
+
+void ConfigReader::SetSliceEvery(){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    sliceEvery = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* histogramElement = root->FirstChildElement("histogram");
+  if (!histogramElement){
+    Logger::Log("Histogram element not found", Logger::Level::ERROR); 
+    sliceEvery = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* element = histogramElement->FirstChildElement("sliceEvery");
+  if (!element){
+    Logger::Log("sliceEvery element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  sliceEvery = GetElementDouble(element, numSentinel);
+}
+
+void ConfigReader::SetImplantDecayBinDt(){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    implantDecayBinDt = static_cast<Long64_t>(numSentinel);
+    return;
+  }
+
+  tinyxml2::XMLElement* histogramElement = root->FirstChildElement("histogram");
+  if (!histogramElement){
+    Logger::Log("Histogram element not found", Logger::Level::ERROR); 
+    implantDecayBinDt = static_cast<Long64_t>(numSentinel);
+    return;
+  }
+
+  tinyxml2::XMLElement* element = histogramElement->FirstChildElement("implantDecayBinDt");
+  if (!element){
+    Logger::Log("implantDecayBinDt element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  implantDecayBinDt = static_cast<Long64_t>(GetElementDouble(element, numSentinel));
+}
+
+void ConfigReader::SetImplantTimeDiff(){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    implantTimeDiff = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* eventConditionsElement = root->FirstChildElement("eventConditions");
+  if (!eventConditionsElement){
+    Logger::Log("eventConditions element not found", Logger::Level::ERROR); 
+    implantTimeDiff = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* element = eventConditionsElement->FirstChildElement("implantTimeDiff");
+  if (!element){
+    Logger::Log("implantTimeDiff element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  implantTimeDiff = GetElementDouble(element, numSentinel);
+}
+
+void ConfigReader::SetImplantEnergyMin(){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    implantEnergyMin = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* eventConditionsElement = root->FirstChildElement("eventConditions");
+  if (!eventConditionsElement){
+    Logger::Log("eventConditions element not found", Logger::Level::ERROR); 
+    implantEnergyMin = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* element = eventConditionsElement->FirstChildElement("implantEnergyMin");
+  if (!element){
+    Logger::Log("implantEnergyMin element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  implantEnergyMin = GetElementDouble(element, numSentinel);
+}
+
+void ConfigReader::SetImplantEnergyMax(){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    implantEnergyMax = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* eventConditionsElement = root->FirstChildElement("eventConditions");
+  if (!eventConditionsElement){
+    Logger::Log("eventConditions element not found", Logger::Level::ERROR); 
+    implantEnergyMax = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* element = eventConditionsElement->FirstChildElement("implantEnergyMax");
+  if (!element){
+    Logger::Log("implantEnergyMax element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  implantEnergyMax = GetElementDouble(element, numSentinel);
+}
+
+void ConfigReader::SetImplantEnergyDiff(){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    implantEnergyDiff = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* eventConditionsElement = root->FirstChildElement("eventConditions");
+  if (!eventConditionsElement){
+    Logger::Log("eventConditions element not found", Logger::Level::ERROR); 
+    implantEnergyDiff = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* element = eventConditionsElement->FirstChildElement("implantEnergyDiff");
+  if (!element){
+    Logger::Log("implantEnergyDiff element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  implantEnergyDiff = GetElementDouble(element, numSentinel);
+}
+
+void ConfigReader::SetImplantClusterSizeMax(){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    implantClusterSizeMax = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* eventConditionsElement = root->FirstChildElement("eventConditions");
+  if (!eventConditionsElement){
+    Logger::Log("eventConditions element not found", Logger::Level::ERROR); 
+    implantClusterSizeMax = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* element = eventConditionsElement->FirstChildElement("implantClusterSizeMax");
+  if (!element){
+    Logger::Log("implantClusterSizeMax element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  implantClusterSizeMax = GetElementInt(element, numSentinel);
+}
+
+void ConfigReader::SetDecayTimeDiff(){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    decayTimeDiff = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* eventConditionsElement = root->FirstChildElement("eventConditions");
+  if (!eventConditionsElement){
+    Logger::Log("eventConditions element not found", Logger::Level::ERROR); 
+    decayTimeDiff = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* element = eventConditionsElement->FirstChildElement("decayTimeDiff");
+  if (!element){
+    Logger::Log("decayTimeDiff element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  decayTimeDiff = GetElementDouble(element, numSentinel);
+}
+
+void ConfigReader::SetDecayEnergyMin(){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    decayEnergyMin = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* eventConditionsElement = root->FirstChildElement("eventConditions");
+  if (!eventConditionsElement){
+    Logger::Log("eventConditions element not found", Logger::Level::ERROR); 
+    decayEnergyMin = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* element = eventConditionsElement->FirstChildElement("decayEnergyMin");
+  if (!element){
+    Logger::Log("decayEnergyMin element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  decayEnergyMin = GetElementDouble(element, numSentinel);
+}
+
+void ConfigReader::SetDecayEnergyMax(){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    decayEnergyMax = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* eventConditionsElement = root->FirstChildElement("eventConditions");
+  if (!eventConditionsElement){
+    Logger::Log("eventConditions element not found", Logger::Level::ERROR); 
+    decayEnergyMax = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* element = eventConditionsElement->FirstChildElement("decayEnergyMax");
+  if (!element){
+    Logger::Log("decayEnergyMax element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  decayEnergyMax = GetElementDouble(element, numSentinel);
+}
+
+void ConfigReader::SetDecayEnergyDiff(){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    decayEnergyDiff = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* eventConditionsElement = root->FirstChildElement("eventConditions");
+  if (!eventConditionsElement){
+    Logger::Log("eventConditions element not found", Logger::Level::ERROR); 
+    decayEnergyDiff = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* element = eventConditionsElement->FirstChildElement("decayEnergyDiff");
+  if (!element){
+    Logger::Log("decayEnergyDiff element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  decayEnergyDiff = GetElementDouble(element, numSentinel);
+}
+
+void ConfigReader::SetDecayClusterSizeMax(){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    decayClusterSizeMax = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* eventConditionsElement = root->FirstChildElement("eventConditions");
+  if (!eventConditionsElement){
+    Logger::Log("eventConditions element not found", Logger::Level::ERROR); 
+    decayClusterSizeMax = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* element = eventConditionsElement->FirstChildElement("decayClusterSizeMax");
+  if (!element){
+    Logger::Log("decayClusterSizeMax element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  decayClusterSizeMax = GetElementInt(element, numSentinel);
+}
+
+void ConfigReader::SetGermaniumEnergyMin(){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    germaniumEnergyMin = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* eventConditionsElement = root->FirstChildElement("eventConditions");
+  if (!eventConditionsElement){
+    Logger::Log("eventConditions element not found", Logger::Level::ERROR); 
+    germaniumEnergyMin = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* element = eventConditionsElement->FirstChildElement("germaniumEnergyMin");
+  if (!element){
+    Logger::Log("germaniumEnergyMin element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    return;
+  }
+  
+  germaniumEnergyMin = GetElementDouble(element, numSentinel);
+}
+
 // Public Methods
 
 void ConfigReader::PrintConfigValues() {
@@ -538,6 +929,21 @@ void ConfigReader::PrintConfigValues() {
   Logger::Log("Config -> Broken Aida Strips Implant Y: " + VectorToString(brokenAidaStripsImplantY), Logger::Level::DEBUG);
   Logger::Log("Config -> Broken Aida Strips Decay X: " + VectorToString(brokenAidaStripsDecayX), Logger::Level::DEBUG);
   Logger::Log("Config -> Broken Aida Strips Decay Y: " + VectorToString(brokenAidaStripsDecayY), Logger::Level::DEBUG);
+  Logger::Log("Histogram -> WR Experiment Start: " + std::to_string(wrExperimentStart), Logger::Level::DEBUG);
+  Logger::Log("Histogram -> WR Experiment End: " + std::to_string(wrExperimentEnd), Logger::Level::DEBUG);
+  Logger::Log("Histogram -> Slice Every: " + std::to_string(sliceEvery), Logger::Level::DEBUG);
+  Logger::Log("Histogram -> Implant Decay Bin dT: " + std::to_string(implantDecayBinDt), Logger::Level::DEBUG);
+  Logger::Log("Event Conditions -> Implant Time Diff: " + std::to_string(implantTimeDiff), Logger::Level::DEBUG);
+  Logger::Log("Event Conditions -> Implant Energy Min: " + std::to_string(implantEnergyMin), Logger::Level::DEBUG);
+  Logger::Log("Event Conditions -> Implant Energy Max: " + std::to_string(implantEnergyMax), Logger::Level::DEBUG);
+  Logger::Log("Event Conditions -> Implant Energy Diff: " + std::to_string(implantEnergyDiff), Logger::Level::DEBUG);
+  Logger::Log("Event Conditions -> Implant Cluster Size Max: " + std::to_string(implantClusterSizeMax), Logger::Level::DEBUG);
+  Logger::Log("Event Conditions -> Decay Time Diff: " + std::to_string(decayTimeDiff), Logger::Level::DEBUG);
+  Logger::Log("Event Conditions -> Decay Energy Min: " + std::to_string(decayEnergyMin), Logger::Level::DEBUG);
+  Logger::Log("Event Conditions -> Decay Energy Max: " + std::to_string(decayEnergyMax), Logger::Level::DEBUG);
+  Logger::Log("Event Conditions -> Decay Energy Diff: " + std::to_string(decayEnergyDiff), Logger::Level::DEBUG);
+  Logger::Log("Event Conditions -> Decay Cluster Size Max: " + std::to_string(decayClusterSizeMax), Logger::Level::DEBUG);
+  Logger::Log("Event Conditions -> Germanium Energy Min: " + std::to_string(germaniumEnergyMin), Logger::Level::DEBUG);
 }
 
 // Parameter Getters
@@ -560,3 +966,18 @@ std::vector<Int_t> ConfigReader::GetBrokenAidaStripsImplantX() const { return br
 std::vector<Int_t> ConfigReader::GetBrokenAidaStripsImplantY() const { return brokenAidaStripsImplantY; }
 std::vector<Int_t> ConfigReader::GetBrokenAidaStripsDecayX() const { return brokenAidaStripsDecayX; }
 std::vector<Int_t> ConfigReader::GetBrokenAidaStripsDecayY() const { return brokenAidaStripsDecayY; }
+Long64_t ConfigReader::GetWrExperimentStart() const { return wrExperimentStart; }
+Long64_t ConfigReader::GetWrExperimentEnd() const { return wrExperimentEnd; }
+Double_t ConfigReader::GetSliceEvery() const { return sliceEvery; }
+Long64_t ConfigReader::GetImplantDecayBinDt() const { return implantDecayBinDt; }
+Double_t ConfigReader::GetImplantTimeDiff() const { return implantTimeDiff; }
+Double_t ConfigReader::GetImplantEnergyMin() const { return implantEnergyMin; }
+Double_t ConfigReader::GetImplantEnergyMax() const { return implantEnergyMax; }
+Double_t ConfigReader::GetImplantEnergyDiff() const { return implantEnergyDiff; }
+Int_t ConfigReader::GetImplantClusterSizeMax() const { return implantClusterSizeMax; }
+Double_t ConfigReader::GetDecayTimeDiff() const { return decayTimeDiff; }
+Double_t ConfigReader::GetDecayEnergyMin() const { return decayEnergyMin; }
+Double_t ConfigReader::GetDecayEnergyMax() const { return decayEnergyMax; }
+Double_t ConfigReader::GetDecayEnergyDiff() const { return decayEnergyDiff; }
+Int_t ConfigReader::GetDecayClusterSizeMax() const { return decayClusterSizeMax; }
+Double_t ConfigReader::GetGermaniumEnergyMin() const { return germaniumEnergyMin; }

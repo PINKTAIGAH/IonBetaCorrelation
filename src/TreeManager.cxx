@@ -61,7 +61,7 @@ void TreeManager::FillMaps(){
 
     // Load implant map
     while (reader.Next()){
-      if ( *implantDssd==ConfigReader::Instance().GetDssd() /* && TMath::Abs((Long64_t)*implantTimeX-(Long64_t)*implantTimeY) < TreeManagerConstants::implantTimeDiff */ ){
+      if ( *implantDssd==ConfigReader::Instance().GetDssd() /* && TMath::Abs((Long64_t)*implantTimeX-(Long64_t)*implantTimeY) < implantTimeDiff */ ){
 
         ImplantEvent tempEvent = {
           *implantTime, *implantTimeX, *implantTimeY, *implantX, *implantY, *implantEnergy, *implantEnergyX, *implantEnergyY, *implantClusterSizeX, *implantClusterSizeY,
@@ -106,7 +106,7 @@ void TreeManager::FillMaps(){
 
     // Load gated implant map
     while (reader.Next()){
-      if ( *gatedImplantDssd==ConfigReader::Instance().GetDssd() /* && TMath::Abs((Long64_t)*gatedImplantTimeX-(Long64_t)*gatedImplantTimeY) < TreeManagerConstants::implantTimeDiff */ ){
+      if ( *gatedImplantDssd==ConfigReader::Instance().GetDssd() /* && TMath::Abs((Long64_t)*gatedImplantTimeX-(Long64_t)*gatedImplantTimeY) < implantTimeDiff */ ){
 
         ImplantEvent tempEvent = {
           *gatedImplantTime, *gatedImplantTimeX, *gatedImplantTimeY, *gatedImplantX, *gatedImplantY, *gatedImplantEnergy, *gatedImplantEnergyX, *gatedImplantEnergyY, *gatedImplantClusterSizeX, *gatedImplantClusterSizeY,
@@ -151,7 +151,7 @@ void TreeManager::FillMaps(){
 
     // Load decay map
     while (reader.Next()){
-      if ( *decayDssd == ConfigReader::Instance().GetDssd() && TMath::Abs((Long64_t)*decayTimeX-(Long64_t)*decayTimeY) < TreeManagerConstants::decayTimeDiff && TMath::Abs(*decayEnergyX-*decayEnergyY) < TreeManagerConstants::decayEnergyDiff && *decayEnergy > TreeManagerConstants::decayEnergyMin && *decayEnergy < TreeManagerConstants::decayEnergyMax ){
+      if ( *decayDssd == ConfigReader::Instance().GetDssd() && TMath::Abs((Long64_t)*decayTimeX-(Long64_t)*decayTimeY) < decayTimeDiff && TMath::Abs(*decayEnergyX-*decayEnergyY) < decayEnergyDiff && *decayEnergy > decayEnergyMin && *decayEnergy < decayEnergyMax ){
 
         DecayEvent tempEvent = {
           *decayTime, *decayTimeX, *decayTimeY, *decayX, *decayY, *decayEnergy, *decayEnergyX, *decayEnergyY, *decayClusterSizeX, *decayClusterSizeY,
@@ -182,7 +182,7 @@ void TreeManager::FillMaps(){
 
     // Load germanium map
     while (reader.Next()){
-      if ( *germaniumEnergy > TreeManagerConstants::germaniumEnergyMin ){
+      if ( *germaniumEnergy > germaniumEnergyMin ){
 
         GermaniumEvent tempEvent = { *germaniumTime, *germaniumEnergy, *germaniumSpill };
 
@@ -234,5 +234,4 @@ EventMaps TreeManager::GetEventMaps(){
 
   EventMaps tempEventMaps {&implantEventMap, &gatedImplantEventMap, &decayEventMap, &germaniumEventMap};
   return tempEventMaps;
-
 }

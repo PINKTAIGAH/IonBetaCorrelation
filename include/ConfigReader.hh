@@ -35,6 +35,21 @@ class ConfigReader{
     std::vector<Int_t> GetBrokenAidaStripsImplantY() const;
     std::vector<Int_t> GetBrokenAidaStripsDecayX() const;
     std::vector<Int_t> GetBrokenAidaStripsDecayY() const;
+    Long64_t GetWrExperimentStart() const;
+    Long64_t GetWrExperimentEnd() const;
+    Double_t GetSliceEvery() const;
+    Long64_t GetImplantDecayBinDt() const;
+    Double_t GetImplantTimeDiff() const;
+    Double_t GetImplantEnergyMin() const;
+    Double_t GetImplantEnergyMax() const;
+    Double_t GetImplantEnergyDiff() const;
+    Int_t GetImplantClusterSizeMax() const;
+    Double_t GetDecayTimeDiff() const;
+    Double_t GetDecayEnergyMin() const;
+    Double_t GetDecayEnergyMax() const;
+    Double_t GetDecayEnergyDiff() const;
+    Int_t GetDecayClusterSizeMax() const;
+    Double_t GetGermaniumEnergyMin() const;
 
   private:
     // Singleton implementation
@@ -74,6 +89,21 @@ class ConfigReader{
     std::vector<Int_t> brokenAidaStripsImplantY;
     std::vector<Int_t> brokenAidaStripsDecayX;
     std::vector<Int_t> brokenAidaStripsDecayY;
+    Long64_t wrExperimentStart;
+    Long64_t wrExperimentEnd;
+    Double_t sliceEvery;
+    Long64_t implantDecayBinDt;
+    Double_t implantTimeDiff;
+    Double_t implantEnergyMin;
+    Double_t implantEnergyMax;
+    Double_t implantEnergyDiff;
+    Int_t implantClusterSizeMax;
+    Double_t decayTimeDiff;
+    Double_t decayEnergyMin;
+    Double_t decayEnergyMax;
+    Double_t decayEnergyDiff;
+    Int_t decayClusterSizeMax;
+    Double_t germaniumEnergyMin;
     
     // Helper methods
     void LoadConfig();
@@ -105,6 +135,21 @@ class ConfigReader{
     void SetBrokenAidaStripsImplantY();
     void SetBrokenAidaStripsDecayX();
     void SetBrokenAidaStripsDecayY();
+    void SetWrExperimentStart();
+    void SetWrExperimentEnd();
+    void SetSliceEvery();
+    void SetImplantDecayBinDt();
+    void SetImplantTimeDiff();
+    void SetImplantEnergyMin();
+    void SetImplantEnergyMax();
+    void SetImplantEnergyDiff();
+    void SetImplantClusterSizeMax();
+    void SetDecayTimeDiff();
+    void SetDecayEnergyMin();
+    void SetDecayEnergyMax();
+    void SetDecayEnergyDiff();
+    void SetDecayClusterSizeMax();
+    void SetGermaniumEnergyMin();
 };
 
 #endif
