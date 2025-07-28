@@ -91,9 +91,15 @@ void CorrelationManager::CorrelateImplantDecays(){
     // Unpack gated implant event
     auto& gatedImplantEvent = gatedImplantItr->second;
 
+    // Create cluster object for implant
+    XYPair implantCluster = {
+      {gatedImplantEvent.cminX, gatedImplantEvent.cmaxX, gatedImplantEvent.x} ,
+      {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY, gatedImplantEvent.y}
+    };
+
     // Veto implant event if overlapping with noisy strip in HEC
-    if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsImplantX(), {gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}) ) continue;
-    if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsImplantY(), {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}) ) continue;
+    if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsImplantX(), implantCluster.x) ) continue;
+    if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsImplantY(), implantCluster.y) ) continue;
 
     // Fill histogram
     histogramManager->h2_aida_implant_xy->Fill(gatedImplantEvent.x, gatedImplantEvent.y); 
@@ -107,7 +113,7 @@ void CorrelationManager::CorrelateImplantDecays(){
     // Loop over forward direction
 
     // Find Lower and upper bounds for decays
-    auto  decayItrStart = decayEventMap->lower_bound((Long64_t)gatedImplantEvent.time - ConfigReader::Instance().GetTimeThreshold());
+    auto  decayItrStart = decayEventMap->lower_bound((Long64_t)gatedImplantEvent.time - 2 * ConfigReader::Instance().GetTimeThreshold());
     auto  decayItrEnd = decayEventMap->upper_bound((Long64_t)gatedImplantEvent.time + 2 * ConfigReader::Instance().GetTimeThreshold());
 
     for (auto decayItr = decayItrStart; decayItr != decayItrEnd; ++decayItr){
@@ -115,28 +121,35 @@ void CorrelationManager::CorrelateImplantDecays(){
       // Unpack decay event
       auto& decayEvent = decayItr->second;
 
+      // Create cluster object for implant
+      XYPair decayCluster = {
+        {decayEvent.cminX, decayEvent.cmaxX, decayEvent.x} ,
+        {decayEvent.cminY, decayEvent.cmaxY, decayEvent.y}
+      };
+
       // Veto decay event if overlapping with noisy strip in HEC
-      if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsDecayX(), {decayEvent.cminX, decayEvent.cmaxX}) ) continue;
-      if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsDecayY(), {decayEvent.cminY, decayEvent.cmaxY}) ) continue;
+      if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsDecayX(), decayCluster.x) ) continue;
+      if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsDecayY(), decayCluster.y) ) continue;
 
       // Check if we only analyse offspill
       if ( ConfigReader::Instance().GetOnlyOffspillDecays() && decayEvent.spill == 1) continue;
 
       // Skip if clusters aren't overlapping
       if ( !AreClustersOverlapping( {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, {{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}, ConfigReader::Instance().GetAllowAjacentClusters() ) ) continue;
-      if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Found! Implant : " + GetClusterStrings({{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}) + " Decays: " + GetClusterStrings({{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}), Logger::Level::DEBUG);
+      // if ( !AreCentroidsCorrelated( implantCluster, decayCluster, 2 ) ) continue;
+      if (ArgumentParser::Instance().GetBoolValue("verbose")) Logger::Log("Implant Decay Found! Implant : " + GetClusterStrings({{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}) + " Decays: " + GetClusterStrings({{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}), Logger::Level::DEBUG);
 
       // Determine timedifference between implant and decay
       Long64_t timediff = (Long64_t)decayEvent.time - (Long64_t)gatedImplantEvent.time;
-      if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Time Difference: " + std::to_string(timediff), Logger::Level::DEBUG);
+      if (ArgumentParser::Instance().GetBoolValue("verbose")) Logger::Log("Implant Decay Time Difference: " + std::to_string(timediff), Logger::Level::DEBUG);
 
       // Skip if implant and decay are not in time window (Shouldn't trigger due to lower and upper bounds)
       if (timediff < 0 || timediff > ConfigReader::Instance().GetTimeThreshold()) continue;
-      if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Time Difference is within threshold ", Logger::Level::DEBUG);
+      if (ArgumentParser::Instance().GetBoolValue("verbose")) Logger::Log("Implant Decay Time Difference is within threshold ", Logger::Level::DEBUG);
 
       // Check if decay is in a deadtime
       if (deadtimeWindowManager->Contains(decayEvent.time, decayEvent.x, decayEvent.y)){
-        if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Decay vetoed due to local implant deadtime ", Logger::Level::DEBUG);
+        if (ArgumentParser::Instance().GetBoolValue("verbose")) Logger::Log("Decay vetoed due to local implant deadtime ", Logger::Level::DEBUG);
         histogramManager->h1_deadtime_implant_vetoed_decay_candidates_time->Fill(decayEvent.time);
         continue;
       }
@@ -196,28 +209,35 @@ void CorrelationManager::CorrelateImplantDecays(){
       // Unpack gated implant event
       auto& decayEvent = decayItr->second;
 
+      // Create cluster object for implant
+      XYPair decayCluster = {
+        {decayEvent.cminX, decayEvent.cmaxX, decayEvent.x} ,
+        {decayEvent.cminY, decayEvent.cmaxY, decayEvent.y}
+      };
+
       // Veto decay event if overlapping with noisy strip in HEC
-      if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsDecayX(), {decayEvent.cminX, decayEvent.cmaxX}) ) continue;
-      if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsDecayY(), {decayEvent.cminY, decayEvent.cmaxY}) ) continue;
+      if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsDecayX(), decayCluster.x) ) continue;
+      if ( IsNoisyStrip(ConfigReader::Instance().GetBrokenAidaStripsDecayY(), decayCluster.y) ) continue;
 
       // Check if we only analyse offspill
       if ( ConfigReader::Instance().GetOnlyOffspillDecays() && decayEvent.spill == 1) continue;
 
       // Skip if clusters aren't overlapping
       if ( !AreClustersOverlapping( {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, {{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}, ConfigReader::Instance().GetAllowAjacentClusters() ) ) continue;
-      if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Found! Implant : " + GetClusterStrings({{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}) + " Decays: " + GetClusterStrings({{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}), Logger::Level::DEBUG);
+      // if ( !AreCentroidsCorrelated( implantCluster, decayCluster, 2 ) ) continue;
+      if (ArgumentParser::Instance().GetBoolValue("verbose")) Logger::Log("Implant Decay Found! Implant : " + GetClusterStrings({{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}) + " Decays: " + GetClusterStrings({{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}), Logger::Level::DEBUG);
 
       // Determine timedifference between implant and decay
       Long64_t timediff = (Long64_t)decayEvent.time - (Long64_t)gatedImplantEvent.time;
-      if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Time Difference: " + std::to_string(timediff), Logger::Level::DEBUG);
+      if (ArgumentParser::Instance().GetBoolValue("verbose")) Logger::Log("Implant Decay Time Difference: " + std::to_string(timediff), Logger::Level::DEBUG);
 
       // Skip if implant and decay are not in time window (Shouldn't trigger due to lower and upper bounds)
       if (-timediff < 0 || -timediff > ConfigReader::Instance().GetTimeThreshold()) continue;
-      if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Implant Decay Time Difference is within threshold ", Logger::Level::DEBUG);
+      if (ArgumentParser::Instance().GetBoolValue("verbose")) Logger::Log("Implant Decay Time Difference is within threshold ", Logger::Level::DEBUG);
 
       // Check if decay is in a deadtime
       if (deadtimeWindowManager->Contains(decayEvent.time, decayEvent.x, decayEvent.y)){
-        if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Decay vetoed due to local implant deadtime ", Logger::Level::DEBUG);
+        if (ArgumentParser::Instance().GetBoolValue("verbose")) Logger::Log("Decay vetoed due to local implant deadtime ", Logger::Level::DEBUG);
         histogramManager->h1_deadtime_implant_vetoed_decay_candidates_time->Fill(decayEvent.time);
         continue;
       }
@@ -364,8 +384,8 @@ void CorrelationManager::CorrelateDecayGermaniums(){
     auto& implantDecayMatchMultiplicity = implantDecayCorrelatedItr.second.implantDecayMatchMultiplicity;
     auto& betaCandidateEventVector = implantDecayCorrelatedItr.second.betaCandidateEventVector;
 
-    if ( implantDecayMatchMultiplicity.forward > ConfigReader::Instance().GetBetaGammaCandidateCut() ) skipForward = true;
-    if ( implantDecayMatchMultiplicity.backward > ConfigReader::Instance().GetBetaGammaCandidateCut() ) skipBackward = true;
+    // if ( implantDecayMatchMultiplicity.forward > ConfigReader::Instance().GetBetaGammaCandidateCut() ) skipForward = true;
+    // if ( implantDecayMatchMultiplicity.backward > ConfigReader::Instance().GetBetaGammaCandidateCut() ) skipBackward = true;
 
     // Loop over beta candidates
     for ( auto& betaCandidateEvent : betaCandidateEventVector ){
@@ -390,7 +410,7 @@ void CorrelationManager::CorrelateDecayGermaniums(){
         // EXPERIMENTAL
         // betaGammaTimediff = -betaGammaTimediff;
         // EXPERIMENTAL
-        if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Beta Gamma time difference: " + std::to_string(betaGammaTimediff), Logger::Level::DEBUG);
+        if (ArgumentParser::Instance().GetBoolValue("verbose")) Logger::Log("Beta Gamma time difference: " + std::to_string(betaGammaTimediff), Logger::Level::DEBUG);
 
         // Fill histos
         histogramManager->h2_gatedimplantbetagamma_betagamma_dt_vs_implantbeta_dt->Fill(betaCandidateEvent.timediff, betaGammaTimediff);
@@ -405,7 +425,7 @@ void CorrelationManager::CorrelateDecayGermaniums(){
 
         // Check if germanium event is in prompt window
         if ( ! (betaGammaTimediff > ConfigReader::Instance().GetDecayGammaWindow().start && betaGammaTimediff < ConfigReader::Instance().GetDecayGammaWindow().end) ) continue;
-        if (ArgumentParser::Instance().HasFlag("v")) Logger::Log("Beta Gamma are correlated!", Logger::Level::DEBUG);
+        if (ArgumentParser::Instance().GetBoolValue("verbose")) Logger::Log("Beta Gamma are correlated!" , Logger::Level::DEBUG);
 
         // Forward Correlation
         if (betaCandidateEvent.correlationType == CorrelationType::FORWARDS){
@@ -543,8 +563,10 @@ void CorrelationManager::RunDecayGermaniumCorrelation(){
 
   Logger::Log("Filling decay histograms");
   FillDecayHistograms();
-  Logger::Log("Correlating all decays to germaniums");
-  FillGermaniumHistograms();
+  if (ConfigReader::Instance().GetPlotBetaGamma()){
+    Logger::Log("Correlating all decays to germaniums");
+    FillGermaniumHistograms();
+  }
   Logger::Log("Correlating matched decays to germaniums");
   CorrelateDecayGermaniums();
   Logger::Log("Number of matched gammas identified: " + std::to_string(matchedGammaCounter));

@@ -26,6 +26,9 @@ class HistogramManager{
 
     TFile* outputFile; 
 
+    // IDEA! If using xml config for hist constant definitions, add durationInSeconds and numberOfSlices 
+    //       here as a private class member 
+
     void InitialiseHistograms();
   
   public:

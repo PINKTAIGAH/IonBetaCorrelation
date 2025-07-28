@@ -55,10 +55,12 @@ void ConfigReader::LoadConfig(){
   SetIsotopeName();
   SetTimeScale();
   SetTimeThreshold();
+  SetDssd();
   SetDecayGammaWindow();
   SetGammaGammaWindow();
   SetImplantDeadTime();
   SetLocalDeadTimePositionWindow();
+  SetPlotBetaGamma();
   SetVetoInterruptedImplants();
   SetOnlyOffspillDecays();
   SetAllowAjacentClusters();
@@ -75,6 +77,7 @@ void ConfigReader::ValidateAllParametersLoaded(){
   if (isotopeName == stringSentinel) unsuccessfulConfigReading = true;
   if (timeScale == numSentinel) unsuccessfulConfigReading = true;
   if (timeThreshold == numSentinel) unsuccessfulConfigReading = true;
+  if (dssd == numSentinel) unsuccessfulConfigReading = true;
   if (decayGammaWindow.start == numSentinel || decayGammaWindow.end == numSentinel) unsuccessfulConfigReading = true;
   if (gammaGammaWindow.start == numSentinel || gammaGammaWindow.end == numSentinel) unsuccessfulConfigReading = true;
   if (implantDeadTime == numSentinel) unsuccessfulConfigReading = true;
@@ -232,6 +235,26 @@ void ConfigReader::SetTimeThreshold() {
   timeThreshold = threshold * timeScale;
 }
 
+void ConfigReader::SetDssd() {
+  
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    dssd = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* element = root->FirstChildElement("dssd");
+  if(!element){
+    Logger::Log("dssd element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    dssd = numSentinel;
+    return;
+  }
+
+  dssd = GetElementInt(element, numSentinel);
+
+}
+
 void ConfigReader::SetDecayGammaWindow() {
   tinyxml2::XMLElement* windowElement = FindWindowElement("decayGamma");
   if (!windowElement) {
@@ -312,6 +335,24 @@ void ConfigReader::SetLocalDeadTimePositionWindow() {
   }
   
   localDeadTimePositionWindow = GetElementDouble(element, numSentinel);
+}
+
+void ConfigReader::SetPlotBetaGamma(){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    plotBetaGamma = boolSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* element = root->FirstChildElement("plotBetaGamma");
+  if (!element){
+    Logger::Log("plotBetaGamma element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    plotBetaGamma = boolSentinel;
+    return;
+  }
+
+  plotBetaGamma = GetElementBool(element, boolSentinel);
 }
 
 void ConfigReader::SetVetoInterruptedImplants() {
@@ -462,10 +503,12 @@ void ConfigReader::PrintConfigValues() {
   Logger::Log("Config -> Isotope Name: " + isotopeName, Logger::Level::DEBUG);
   Logger::Log("Config -> Time Scale: " + std::to_string(timeScale), Logger::Level::DEBUG);
   Logger::Log("Config -> Time Threshold: " + std::to_string(timeThreshold), Logger::Level::DEBUG);
+  Logger::Log("Config -> Dssd: " + std::to_string(dssd), Logger::Level::DEBUG);
   Logger::Log("Config -> Decay Gamma Window: (" + std::to_string(decayGammaWindow.start) + "," + std::to_string(decayGammaWindow.end) + ")", Logger::Level::DEBUG);
   Logger::Log("Config -> Gamma Gamma Window: (" + std::to_string(gammaGammaWindow.start) + "," + std::to_string(gammaGammaWindow.end) + ")", Logger::Level::DEBUG);
   Logger::Log("Config -> Implant Deadtime: " + std::to_string(implantDeadTime), Logger::Level::DEBUG);
   Logger::Log("Config -> Local Deadtime Position Window: " + std::to_string(localDeadTimePositionWindow), Logger::Level::DEBUG);
+  Logger::Log("Config -> Plot Beta Gamma: " + std::to_string(plotBetaGamma), Logger::Level::DEBUG);
   Logger::Log("Config -> Veto Interrupted Implants: " + std::to_string(vetoInterruptedImplants), Logger::Level::DEBUG);
   Logger::Log("Config -> Only Offspill Decays: " + std::to_string(onlyOffspillDecays), Logger::Level::DEBUG);
   Logger::Log("Config -> Allow Adjacent Clusters: " + std::to_string(allowAjacentClusters), Logger::Level::DEBUG);
@@ -481,10 +524,12 @@ void ConfigReader::PrintConfigValues() {
 std::string ConfigReader::GetIsotopeName() const { return isotopeName; }
 Long64_t ConfigReader::GetTimeScale() const { return timeScale; }
 Long64_t ConfigReader::GetTimeThreshold() const { return timeThreshold; }
+Int_t ConfigReader::GetDssd() const { return dssd; }
 PromptWindow ConfigReader::GetDecayGammaWindow() const { return decayGammaWindow; }
 PromptWindow ConfigReader::GetGammaGammaWindow() const { return gammaGammaWindow; }
 Long64_t ConfigReader::GetImplantDeadTime() const { return implantDeadTime; }
 Double_t ConfigReader::GetLocalDeadTimePositionWindow() const { return localDeadTimePositionWindow; }
+bool ConfigReader::GetPlotBetaGamma() const { return plotBetaGamma; }
 bool ConfigReader::GetVetoInterruptedImplants() const { return vetoInterruptedImplants; }
 bool ConfigReader::GetOnlyOffspillDecays() const { return onlyOffspillDecays; }
 bool ConfigReader::GetAllowAjacentClusters() const { return allowAjacentClusters; }

@@ -9,6 +9,11 @@
         <timeScale> 1e9 </timeScale>
         <timeThreshold> 50 </timeThreshold>
     </isotope>
+    
+    <isotope name="81zr">
+        <timeScale> 1e9 </timeScale>
+        <timeThreshold> 30 </timeThreshold>
+    </isotope>
 
     <window name = "decayGamma">
         <start> -18200 </start>
@@ -20,6 +25,9 @@
         <end> 500 </end>
     </window>
 
+    <dssd> 1 </dssd>                            
+    <plotBetaGamma> true </plotBetaGamma>       
+
     <implantDeadtime> 350e3 </implantDeadtime>
     <totalDeadtimePositionWindow> 5. </totalDeadtimePositionWindow>
 
@@ -29,9 +37,17 @@
 
     <betaGammaCandidateCut> 5 </betaGammaCandidateCut>
 
-    <brokenAidaStripsDecayX> 128 </brokenAidaStripsDecayX>
+    <brokenAidaStripsDecayX> 63 64 66 67 128 130 189 191 192 194 </brokenAidaStripsDecayX>
     <brokenAidaStripsDecayY></brokenAidaStripsDecayY>
     <brokenAidaStripsImplantX></brokenAidaStripsImplantX>
     <brokenAidaStripsImplantY></brokenAidaStripsImplantY>
+
+    <histograms>
+        <!-- Add histogram constants here -->
+    </histograms>
+
+    <eventConditions>
+        <!-- Add histogram constants here -->
+    </eventConditions>
 
 </config>

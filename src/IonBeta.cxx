@@ -36,7 +36,7 @@ void IonBeta(){
   }
 
   // Open output file
-  TFile* outputFile = new TFile(ArgumentParser::Instance().GetValue("O").c_str(), "RECREATE");
+  TFile* outputFile = new TFile(ArgumentParser::Instance().GetValue("output").c_str(), "RECREATE");
   if (!outputFile){
     delete outputFile;
     Logger::Log("Could not create output file ", Logger::Level::FATAL);

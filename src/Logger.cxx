@@ -10,7 +10,7 @@
 
 void Logger::Log(const std::string& message, Level level){
 
-  if (ArgumentParser::Instance().HasFlag("noansi")){
+  if (ArgumentParser::Instance().GetBoolValue("noansi")){
     std::cout << '[' << GetCurrentTime() << ']' 
               << '[' << LevelToString(level) << "] "
               << message << std::endl;

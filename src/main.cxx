@@ -11,28 +11,20 @@ int main (int argc, char* argv[]){
   Logger::ScopedTimer programTimer("Program ionbeta");
 
   // Define program flags
-  ArgumentParser::Instance().AddFlag("I", "Isotope name", true);
-  ArgumentParser::Instance().AddFlag("C", "Config file", true);
-  ArgumentParser::Instance().AddFlag("O", "Output file path", false, "output.root");
-  ArgumentParser::Instance().AddFlag("v", "Verbose mode", false);
-  ArgumentParser::Instance().AddFlag("help", "Show help message", false);
-  ArgumentParser::Instance().AddFlag("noansi", "Dissable ANSI escape tags in console logs (for piping into a log file)", false);
+  ArgumentParser::Instance().AddFlag("isotope", "Isotope name", true, "", "i");
+  ArgumentParser::Instance().AddFlag("config", "Config file", true, "", "c");
+  ArgumentParser::Instance().AddFlag("output", "Output file path", false, "output.root", "o");
+  ArgumentParser::Instance().AddBooleanFlag("verbose", "Verbose mode", "v");
+  ArgumentParser::Instance().AddBooleanFlag("help", "Show help message");
+  ArgumentParser::Instance().AddBooleanFlag("noansi", "Dissable ANSI escape tags in console logs (for piping into a log file)");
 
   // Parse arguments
   if (!ArgumentParser::Instance().Parse(argc, argv)){
-    ArgumentParser::Instance().PrintHelp(); 
-    Logger::Log("Required parameters not provided to program", Logger::Level::FATAL);
     return 1;
   }
 
-  // Check if help flag called 
-  if (ArgumentParser::Instance().HasFlag("help")){
-    ArgumentParser::Instance().PrintHelp(); 
-    return 0;
-  }
-
-  ConfigReader::Instance().Initialise( ArgumentParser::Instance().GetValue("C"), ArgumentParser::Instance().GetValue("I") );
-  if (ArgumentParser::Instance().HasFlag("v")) ConfigReader::Instance().PrintConfigValues();
+  ConfigReader::Instance().Initialise( ArgumentParser::Instance().GetValue("config"), ArgumentParser::Instance().GetValue("isotope") );
+  if (ArgumentParser::Instance().GetBoolValue("verbose")) ConfigReader::Instance().PrintConfigValues();
 
   if ( ArgumentParser::Instance().GetPositionalArg(0) == "" ){
     Logger::Log("No input files provided", Logger::Level::FATAL);

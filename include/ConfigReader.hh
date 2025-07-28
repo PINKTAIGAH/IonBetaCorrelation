@@ -20,10 +20,12 @@ class ConfigReader{
     std::string GetIsotopeName() const;
     Long64_t GetTimeScale() const;
     Long64_t GetTimeThreshold() const;
+    Int_t GetDssd() const;
     PromptWindow GetDecayGammaWindow() const;
     PromptWindow GetGammaGammaWindow() const;
     Long64_t GetImplantDeadTime() const;
     Double_t GetLocalDeadTimePositionWindow() const;
+    bool GetPlotBetaGamma() const;
     bool GetVetoInterruptedImplants() const;
     bool GetOnlyOffspillDecays() const;
     bool GetAllowAjacentClusters() const;
@@ -56,10 +58,12 @@ class ConfigReader{
     std::string isotopeName;
     Long64_t timeScale;
     Long64_t timeThreshold;
+    Int_t dssd;
     PromptWindow decayGammaWindow;
     PromptWindow gammaGammaWindow;
     ULong64_t implantDeadTime;
     Double_t localDeadTimePositionWindow;
+    bool plotBetaGamma;
     bool vetoInterruptedImplants;
     bool onlyOffspillDecays;
     bool allowAjacentClusters;
@@ -84,10 +88,12 @@ class ConfigReader{
     void SetIsotopeName();
     void SetTimeScale();
     void SetTimeThreshold();
+    void SetDssd();
     void SetDecayGammaWindow();
     void SetGammaGammaWindow();
     void SetImplantDeadTime();
     void SetLocalDeadTimePositionWindow();
+    void SetPlotBetaGamma();
     void SetVetoInterruptedImplants();
     void SetOnlyOffspillDecays();
     void SetAllowAjacentClusters();

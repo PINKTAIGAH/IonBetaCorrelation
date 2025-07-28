@@ -19,7 +19,6 @@
 namespace TreeManagerConstants{
 
   // Event gate values
-  const Int_t dssd = 1;
   const Double_t implantTimeDiff = 5e3;
   const Double_t implantEnergyMin = 3.5e3;
   const Double_t implantEnergyMax = 7e3;
