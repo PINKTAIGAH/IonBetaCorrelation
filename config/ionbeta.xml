@@ -36,6 +36,7 @@
     <allowAjacentClusters> true </allowAjacentClusters>
 
     <betaGammaCandidateCut> 5 </betaGammaCandidateCut>
+    <correlationPositionWindow> 1 </correlationPositionWindow> <!-- abs(x - x_other) <= correlationPositionWindow --> 
 
     <brokenAidaStripsDecayX> 63 64 66 67 128 130 189 191 192 194 </brokenAidaStripsDecayX>
     <brokenAidaStripsDecayY></brokenAidaStripsDecayY>

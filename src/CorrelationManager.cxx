@@ -135,8 +135,8 @@ void CorrelationManager::CorrelateImplantDecays(){
       if ( ConfigReader::Instance().GetOnlyOffspillDecays() && decayEvent.spill == 1) continue;
 
       // Skip if clusters aren't overlapping
-      if ( !AreClustersOverlapping( {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, {{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}, ConfigReader::Instance().GetAllowAjacentClusters() ) ) continue;
-      // if ( !AreCentroidsCorrelated( implantCluster, decayCluster, 2 ) ) continue;
+      // if ( !AreClustersOverlapping( {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, {{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}, ConfigReader::Instance().GetAllowAjacentClusters() ) ) continue;
+      if ( !AreCentroidsCorrelated( implantCluster, decayCluster, ConfigReader::Instance().GetCorrelationPositionWindow() ) ) continue;
       if (ArgumentParser::Instance().GetBoolValue("verbose")) Logger::Log("Implant Decay Found! Implant : " + GetClusterStrings({{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}) + " Decays: " + GetClusterStrings({{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}), Logger::Level::DEBUG);
 
       // Determine timedifference between implant and decay
@@ -223,8 +223,8 @@ void CorrelationManager::CorrelateImplantDecays(){
       if ( ConfigReader::Instance().GetOnlyOffspillDecays() && decayEvent.spill == 1) continue;
 
       // Skip if clusters aren't overlapping
-      if ( !AreClustersOverlapping( {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, {{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}, ConfigReader::Instance().GetAllowAjacentClusters() ) ) continue;
-      // if ( !AreCentroidsCorrelated( implantCluster, decayCluster, 2 ) ) continue;
+      // if ( !AreClustersOverlapping( {{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}, {{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}, ConfigReader::Instance().GetAllowAjacentClusters() ) ) continue;
+      if ( !AreCentroidsCorrelated( implantCluster, decayCluster, ConfigReader::Instance().GetCorrelationPositionWindow() ) ) continue;
       if (ArgumentParser::Instance().GetBoolValue("verbose")) Logger::Log("Implant Decay Found! Implant : " + GetClusterStrings({{gatedImplantEvent.cminX, gatedImplantEvent.cmaxX}, {gatedImplantEvent.cminY, gatedImplantEvent.cmaxY}}) + " Decays: " + GetClusterStrings({{decayEvent.cminX, decayEvent.cmaxX}, {decayEvent.cminY, decayEvent.cmaxY}}), Logger::Level::DEBUG);
 
       // Determine timedifference between implant and decay

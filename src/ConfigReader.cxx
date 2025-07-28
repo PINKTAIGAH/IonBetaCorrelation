@@ -65,6 +65,7 @@ void ConfigReader::LoadConfig(){
   SetOnlyOffspillDecays();
   SetAllowAjacentClusters();
   SetBetaGammaCandidateCut();
+  SetCorrelationPositionWindow();
   SetBrokenAidaStripsImplantX();
   SetBrokenAidaStripsImplantY();
   SetBrokenAidaStripsDecayX();
@@ -83,6 +84,7 @@ void ConfigReader::ValidateAllParametersLoaded(){
   if (implantDeadTime == numSentinel) unsuccessfulConfigReading = true;
   if (localDeadTimePositionWindow == numSentinel) unsuccessfulConfigReading = true;
   if (betaGammaCandidateCut == numSentinel) unsuccessfulConfigReading = true;
+  if (correlationPositionWindow == numSentinel) unsuccessfulConfigReading = true;
 }
 
 std::vector<Int_t> ConfigReader::ParseStringToVector(const std::string& spaceString){
@@ -427,6 +429,24 @@ void ConfigReader::SetBetaGammaCandidateCut() {
   betaGammaCandidateCut = GetElementInt(element, numSentinel);
 }
 
+void ConfigReader::SetCorrelationPositionWindow(){
+  tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
+  if (!root){
+    correlationPositionWindow = numSentinel;
+    return;
+  }
+
+  tinyxml2::XMLElement* element = root->FirstChildElement("correlationPositionWindow");
+  if (!element){
+    Logger::Log("correlationPositionWindow element not found", Logger::Level::ERROR);
+    unsuccessfulConfigReading = true;
+    correlationPositionWindow = numSentinel;
+    return;
+  }
+
+  correlationPositionWindow = GetElementBool(element, numSentinel);
+}
+
 void ConfigReader::SetBrokenAidaStripsImplantX() {
   tinyxml2::XMLElement* root = xmlDoc->FirstChildElement("config");
   if (!root) return;
@@ -513,6 +533,7 @@ void ConfigReader::PrintConfigValues() {
   Logger::Log("Config -> Only Offspill Decays: " + std::to_string(onlyOffspillDecays), Logger::Level::DEBUG);
   Logger::Log("Config -> Allow Adjacent Clusters: " + std::to_string(allowAjacentClusters), Logger::Level::DEBUG);
   Logger::Log("Config -> Beta Gamma Candidate Cut: " + std::to_string(betaGammaCandidateCut), Logger::Level::DEBUG);
+  Logger::Log("Config -> Correlation Position Window: " + std::to_string(correlationPositionWindow), Logger::Level::DEBUG);
   Logger::Log("Config -> Broken Aida Strips Implant X: " + VectorToString(brokenAidaStripsImplantX), Logger::Level::DEBUG);
   Logger::Log("Config -> Broken Aida Strips Implant Y: " + VectorToString(brokenAidaStripsImplantY), Logger::Level::DEBUG);
   Logger::Log("Config -> Broken Aida Strips Decay X: " + VectorToString(brokenAidaStripsDecayX), Logger::Level::DEBUG);
@@ -534,6 +555,7 @@ bool ConfigReader::GetVetoInterruptedImplants() const { return vetoInterruptedIm
 bool ConfigReader::GetOnlyOffspillDecays() const { return onlyOffspillDecays; }
 bool ConfigReader::GetAllowAjacentClusters() const { return allowAjacentClusters; }
 Int_t ConfigReader::GetBetaGammaCandidateCut() const { return betaGammaCandidateCut; }
+Int_t ConfigReader::GetCorrelationPositionWindow() const { return correlationPositionWindow; }
 std::vector<Int_t> ConfigReader::GetBrokenAidaStripsImplantX() const { return brokenAidaStripsImplantX; }
 std::vector<Int_t> ConfigReader::GetBrokenAidaStripsImplantY() const { return brokenAidaStripsImplantY; }
 std::vector<Int_t> ConfigReader::GetBrokenAidaStripsDecayX() const { return brokenAidaStripsDecayX; }

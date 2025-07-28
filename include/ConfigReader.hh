@@ -30,6 +30,7 @@ class ConfigReader{
     bool GetOnlyOffspillDecays() const;
     bool GetAllowAjacentClusters() const;
     Int_t GetBetaGammaCandidateCut() const;
+    Int_t GetCorrelationPositionWindow() const;
     std::vector<Int_t> GetBrokenAidaStripsImplantX() const;
     std::vector<Int_t> GetBrokenAidaStripsImplantY() const;
     std::vector<Int_t> GetBrokenAidaStripsDecayX() const;
@@ -68,6 +69,7 @@ class ConfigReader{
     bool onlyOffspillDecays;
     bool allowAjacentClusters;
     Int_t betaGammaCandidateCut;
+    Int_t correlationPositionWindow;
     std::vector<Int_t> brokenAidaStripsImplantX;
     std::vector<Int_t> brokenAidaStripsImplantY;
     std::vector<Int_t> brokenAidaStripsDecayX;
@@ -98,6 +100,7 @@ class ConfigReader{
     void SetOnlyOffspillDecays();
     void SetAllowAjacentClusters();
     void SetBetaGammaCandidateCut();
+    void SetCorrelationPositionWindow();
     void SetBrokenAidaStripsImplantX();
     void SetBrokenAidaStripsImplantY();
     void SetBrokenAidaStripsDecayX();
